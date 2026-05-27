@@ -5,13 +5,11 @@ import (
 	"log/slog"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/tyzerrr/aws-log-practice/server/internal/adapter/db/sqlc"
 )
 
 type DBPool struct {
-	pool    *pgxpool.Pool
-	logger  *slog.Logger
-	Querier sqlc.Querier
+	Pool   *pgxpool.Pool
+	logger *slog.Logger
 }
 
 func NewDBPool(ctx context.Context, logger *slog.Logger, connectionString string) (*DBPool, error) {
@@ -27,12 +25,11 @@ func NewDBPool(ctx context.Context, logger *slog.Logger, connectionString string
 	}
 
 	return &DBPool{
-		pool:    p,
-		logger:  logger,
-		Querier: sqlc.New(p),
+		Pool:   p,
+		logger: logger,
 	}, nil
 }
 
 func (db *DBPool) Close() {
-	db.pool.Close()
+	db.Pool.Close()
 }
