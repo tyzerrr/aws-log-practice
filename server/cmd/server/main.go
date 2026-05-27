@@ -11,8 +11,12 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/tyzerrr/aws-log-practice/server/gen/greet/v1/v1connect"
+	"github.com/tyzerrr/aws-log-practice/server/cmd/server/handler"
+	greetv1connect "github.com/tyzerrr/aws-log-practice/server/gen/greet/v1/v1connect"
+	productv1connect "github.com/tyzerrr/aws-log-practice/server/gen/product/v1/v1connect"
 	"github.com/tyzerrr/aws-log-practice/server/internal/adapter/db"
+	"github.com/tyzerrr/aws-log-practice/server/internal/infrastructure"
+	"github.com/tyzerrr/aws-log-practice/server/internal/usecase"
 )
 
 const (
@@ -43,8 +47,17 @@ func run(logger *slog.Logger) error {
 	// http server
 	addr := fmt.Sprintf(":%s", os.Getenv("SERVER_PORT"))
 	mux := http.NewServeMux()
-	path, greetHandler := v1connect.NewGreetServiceHandler(NewGreetHandler())
-	mux.Handle(path, greetHandler)
+
+	// products
+	productRepo := infrastructure.NewProductRepository(dbPool)
+	productUsecase := usecase.NewProductUsecase(logger, productRepo)
+	productPath, productHandler := productv1connect.NewProductServiceHandler(
+		handler.NewProductHandler(
+			logger,
+			productUsecase,
+		),
+	)
+	mux.Handle(productPath, productHandler)
 
 	p := new(http.Protocols)
 	p.SetHTTP1(true)
