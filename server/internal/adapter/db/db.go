@@ -5,11 +5,13 @@ import (
 	"log/slog"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/tyzerrr/aws-log-practice/server/internal/adapter/db/sqlc"
 )
 
 type DBPool struct {
-	pool   *pgxpool.Pool
-	logger *slog.Logger
+	pool    *pgxpool.Pool
+	logger  *slog.Logger
+	Querier sqlc.Querier
 }
 
 func NewDBPool(ctx context.Context, logger *slog.Logger, connectionString string) (*DBPool, error) {
@@ -23,9 +25,11 @@ func NewDBPool(ctx context.Context, logger *slog.Logger, connectionString string
 		logger.Error("failed to ping to db pool, so close db pool", slog.String("error", err.Error()))
 		return nil, err
 	}
+
 	return &DBPool{
-		pool:   p,
-		logger: logger,
+		pool:    p,
+		logger:  logger,
+		Querier: sqlc.New(p),
 	}, nil
 }
 
