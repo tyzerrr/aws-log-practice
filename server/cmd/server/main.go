@@ -33,7 +33,7 @@ func run(logger *slog.Logger) error {
 	defer stop()
 
 	// db pool
-	dbPool, err := db.NewDBPool(ctx, logger, os.Getenv("DB_URL"))
+	dbPool, err := db.NewDBPool(ctx, logger, os.Getenv("DATABASE_URL"))
 	if err != nil {
 		logger.Error("failed to start db pool", slog.String("error", err.Error()))
 		return err
