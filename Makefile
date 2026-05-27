@@ -34,3 +34,7 @@ db-diff: $(ATLAS)
 .PHONY: db-hash
 db-hash: $(ATLAS)
 	@$(ATLAS) migrate hash --env local
+
+.PHONY: sqlc
+sqlc:
+	@go tool sqlc generate
