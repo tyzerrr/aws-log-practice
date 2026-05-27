@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/tyzerrr/aws-log-practice/server/cmd/server/handler"
-	greetv1connect "github.com/tyzerrr/aws-log-practice/server/gen/greet/v1/v1connect"
 	productv1connect "github.com/tyzerrr/aws-log-practice/server/gen/product/v1/v1connect"
 	"github.com/tyzerrr/aws-log-practice/server/internal/adapter/db"
 	"github.com/tyzerrr/aws-log-practice/server/internal/infrastructure"
@@ -44,13 +43,18 @@ func run(logger *slog.Logger) error {
 	}
 	defer dbPool.Close()
 
+	txManager := infrastructure.NewTransactionManager(dbPool.Pool)
+
 	// http server
 	addr := fmt.Sprintf(":%s", os.Getenv("SERVER_PORT"))
 	mux := http.NewServeMux()
 
 	// products
-	productRepo := infrastructure.NewProductRepository(dbPool)
-	productUsecase := usecase.NewProductUsecase(logger, productRepo)
+	productUsecase := usecase.NewProductUsecase(
+		logger,
+		infrastructure.NewProductRepository,
+		txManager,
+	)
 	productPath, productHandler := productv1connect.NewProductServiceHandler(
 		handler.NewProductHandler(
 			logger,
