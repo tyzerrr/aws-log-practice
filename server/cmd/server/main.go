@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/tyzerrr/aws-log-practice/server/gen/greet/v1/v1connect"
+	"github.com/tyzerrr/aws-log-practice/server/internal/adapter/db"
 )
 
 const (
@@ -31,6 +32,15 @@ func run(logger *slog.Logger) error {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
+	// db pool
+	dbPool, err := db.NewDBPool(ctx, logger, os.Getenv("DB_URL"))
+	defer dbPool.Close()
+	if err != nil {
+		logger.Error("failed to start db pool", slog.String("error", err.Error()))
+		return err
+	}
+
+	// http server
 	addr := fmt.Sprintf(":%s", os.Getenv("SERVER_PORT"))
 	mux := http.NewServeMux()
 	path, greetHandler := v1connect.NewGreetServiceHandler(NewGreetHandler())
