@@ -34,11 +34,11 @@ func run(logger *slog.Logger) error {
 
 	// db pool
 	dbPool, err := db.NewDBPool(ctx, logger, os.Getenv("DB_URL"))
-	defer dbPool.Close()
 	if err != nil {
 		logger.Error("failed to start db pool", slog.String("error", err.Error()))
 		return err
 	}
+	defer dbPool.Close()
 
 	// http server
 	addr := fmt.Sprintf(":%s", os.Getenv("SERVER_PORT"))
