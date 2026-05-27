@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package product.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/tyzerrr/aws-log-practice/server/gen/product/v1";
+
+service ProductService {
+  rpc RegisterProducts(RegisterProductsRequest) returns (RegisterProductsResponse);
+  rpc ListProducts(ListProductsRequest) returns (ListProductsResponse);
+}
+
+message Product {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  int32 price_amount = 4;
+  string currency_code = 5;
+  bool is_active = 6;
+  google.protobuf.Timestamp created_at = 7;
+  google.protobuf.Timestamp updated_at = 8;
+}
+
+message ProductInput {
+  string name = 1;
+  string description = 2;
+  int32 price_amount = 3;
+  string currency_code = 4;
+  bool is_active = 5;
+}
+
+message RegisterProductsRequest {
+  repeated ProductInput products = 1;
+}
+
+message RegisterProductsResponse {
+  repeated Product products = 1;
+}
+
+message ListProductsRequest {}
+
+message ListProductsResponse {
+  repeated Product products = 1;
+}
