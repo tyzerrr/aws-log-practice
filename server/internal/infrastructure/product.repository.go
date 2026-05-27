@@ -3,18 +3,18 @@ package infrastructure
 import (
 	"context"
 
-	"github.com/tyzerrr/aws-log-practice/server/internal/adapter/db"
+	"github.com/tyzerrr/aws-log-practice/server/internal/adapter/db/sqlc"
 	"github.com/tyzerrr/aws-log-practice/server/internal/domain"
 	"github.com/tyzerrr/aws-log-practice/server/internal/domain/entity"
 )
 
 type ProductRepository struct {
-	db *db.DBPool
+	querier *sqlc.Queries
 }
 
-func NewProductRepository(db *db.DBPool) domain.ProductRepository {
+func NewProductRepository(db sqlc.DBTX) domain.ProductRepository {
 	return &ProductRepository{
-		db: db,
+		querier: sqlc.New(db),
 	}
 }
 
