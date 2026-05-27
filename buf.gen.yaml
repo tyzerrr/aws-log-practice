@@ -1,0 +1,13 @@
+version: v2
+clean: true
+plugins:
+  # Goの基本型の生成
+  - local: [go, tool, protoc-gen-go]
+    out: server/gen
+    opt: paths=source_relative
+  #Connect RPCのGoコードを生成
+  - local: [go, tool, protoc-gen-connect-go]
+    out: server/gen
+    opt:
+      - paths=source_relative
+      - simple
