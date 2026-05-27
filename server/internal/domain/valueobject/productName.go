@@ -17,6 +17,10 @@ func NewProductName(value string) (ProductName, error) {
 	return ProductName{value: value}, nil
 }
 
+func (p ProductName) Value() string {
+	return p.value
+}
+
 func validateProductName(value string) error {
 	if len(value) == 0 {
 		return ErrEmptyProductName

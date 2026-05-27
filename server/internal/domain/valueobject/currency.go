@@ -17,6 +17,10 @@ func NewCurrency(value string) (Currency, error) {
 	return Currency{value: value}, nil
 }
 
+func (c Currency) Value() string {
+	return c.value
+}
+
 func validateCurrency(value string) error {
 	if len(value) == 0 {
 		return ErrEmptyCurrency

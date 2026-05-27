@@ -17,6 +17,10 @@ func NewProductAmount(value int64) (PriceAmount, error) {
 	return PriceAmount{value: value}, nil
 }
 
+func (p PriceAmount) Value() int64 {
+	return p.value
+}
+
 func validatePriceAmount(value int64) error {
 	if value < 0 {
 		return ErrNegativeValue
