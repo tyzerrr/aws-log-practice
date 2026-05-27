@@ -38,3 +38,7 @@ db-hash: $(ATLAS)
 .PHONY: sqlc
 sqlc:
 	@go tool sqlc generate
+
+.PHONY: buf-gen
+buf-gen:
+	@buf generate
