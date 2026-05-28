@@ -22,7 +22,7 @@ type Querier interface {
 	GetStockByProductID(ctx context.Context, productID pgtype.UUID) (Stock, error)
 	GetTransaction(ctx context.Context, id pgtype.UUID) (Transaction, error)
 	ListActiveProducts(ctx context.Context, arg ListActiveProductsParams) ([]Product, error)
-	ListLowStocks(ctx context.Context, threshold int32) ([]Stock, error)
+	ListLowStocks(ctx context.Context, threshold int64) ([]Stock, error)
 	ListOrdersByStatus(ctx context.Context, arg ListOrdersByStatusParams) ([]Order, error)
 	ListOrdersByTransactionID(ctx context.Context, transactionID pgtype.UUID) ([]Order, error)
 	ListOrdersForProduct(ctx context.Context, arg ListOrdersForProductParams) ([]Order, error)

@@ -23,7 +23,7 @@ RETURNING product_id, quantity, reserved_quantity, created_at, updated_at
 `
 
 type CommitReservedStockParams struct {
-	Quantity  int32       `json:"quantity"`
+	Quantity  int64       `json:"quantity"`
 	ProductID pgtype.UUID `json:"product_id"`
 }
 
@@ -53,7 +53,7 @@ RETURNING product_id, quantity, reserved_quantity, created_at, updated_at
 
 type CreateStockParams struct {
 	ProductID pgtype.UUID `json:"product_id"`
-	Quantity  int32       `json:"quantity"`
+	Quantity  int64       `json:"quantity"`
 }
 
 func (q *Queries) CreateStock(ctx context.Context, arg CreateStockParams) (Stock, error) {
@@ -95,7 +95,7 @@ WHERE quantity - reserved_quantity <= $1
 ORDER BY quantity - reserved_quantity ASC, updated_at DESC
 `
 
-func (q *Queries) ListLowStocks(ctx context.Context, threshold int32) ([]Stock, error) {
+func (q *Queries) ListLowStocks(ctx context.Context, threshold int64) ([]Stock, error) {
 	rows, err := q.db.Query(ctx, listLowStocks, threshold)
 	if err != nil {
 		return nil, err
@@ -132,7 +132,7 @@ RETURNING product_id, quantity, reserved_quantity, created_at, updated_at
 `
 
 type ReleaseReservedStockParams struct {
-	Quantity  int32       `json:"quantity"`
+	Quantity  int64       `json:"quantity"`
 	ProductID pgtype.UUID `json:"product_id"`
 }
 
@@ -160,7 +160,7 @@ RETURNING product_id, quantity, reserved_quantity, created_at, updated_at
 `
 
 type ReserveStockParams struct {
-	Quantity  int32       `json:"quantity"`
+	Quantity  int64       `json:"quantity"`
 	ProductID pgtype.UUID `json:"product_id"`
 }
 
@@ -187,7 +187,7 @@ RETURNING product_id, quantity, reserved_quantity, created_at, updated_at
 `
 
 type UpdateStockQuantityParams struct {
-	Quantity  int32       `json:"quantity"`
+	Quantity  int64       `json:"quantity"`
 	ProductID pgtype.UUID `json:"product_id"`
 }
 

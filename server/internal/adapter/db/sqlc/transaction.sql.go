@@ -25,7 +25,7 @@ RETURNING id, total_price_amount, currency_code, status, created_at, updated_at
 `
 
 type CreateTransactionParams struct {
-	TotalPriceAmount int32  `json:"total_price_amount"`
+	TotalPriceAmount int64  `json:"total_price_amount"`
 	CurrencyCode     string `json:"currency_code"`
 	Status           string `json:"status"`
 }
@@ -144,7 +144,7 @@ RETURNING id, total_price_amount, currency_code, status, created_at, updated_at
 `
 
 type UpdateTransactionTotalPriceAmountParams struct {
-	TotalPriceAmount int32       `json:"total_price_amount"`
+	TotalPriceAmount int64       `json:"total_price_amount"`
 	ID               pgtype.UUID `json:"id"`
 }
 

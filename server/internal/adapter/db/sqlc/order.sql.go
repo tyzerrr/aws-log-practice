@@ -35,9 +35,9 @@ RETURNING id, transaction_id, product_id, quantity, unit_price_amount, total_pri
 type CreateOrderParams struct {
 	TransactionID    pgtype.UUID `json:"transaction_id"`
 	ProductID        pgtype.UUID `json:"product_id"`
-	Quantity         int32       `json:"quantity"`
-	UnitPriceAmount  int32       `json:"unit_price_amount"`
-	TotalPriceAmount int32       `json:"total_price_amount"`
+	Quantity         int64       `json:"quantity"`
+	UnitPriceAmount  int64       `json:"unit_price_amount"`
+	TotalPriceAmount int64       `json:"total_price_amount"`
 	CurrencyCode     string      `json:"currency_code"`
 	Status           string      `json:"status"`
 }

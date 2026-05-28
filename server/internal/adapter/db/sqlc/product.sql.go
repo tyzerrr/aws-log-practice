@@ -31,7 +31,7 @@ RETURNING id, name, description, price_amount, currency_code, is_active, created
 type CreateProductParams struct {
 	Name         string `json:"name"`
 	Description  string `json:"description"`
-	PriceAmount  int32  `json:"price_amount"`
+	PriceAmount  int64  `json:"price_amount"`
 	CurrencyCode string `json:"currency_code"`
 	IsActive     bool   `json:"is_active"`
 }
@@ -164,7 +164,7 @@ RETURNING id, name, description, price_amount, currency_code, is_active, created
 type UpdateProductParams struct {
 	Name         string      `json:"name"`
 	Description  string      `json:"description"`
-	PriceAmount  int32       `json:"price_amount"`
+	PriceAmount  int64       `json:"price_amount"`
 	CurrencyCode string      `json:"currency_code"`
 	IsActive     bool        `json:"is_active"`
 	ID           pgtype.UUID `json:"id"`

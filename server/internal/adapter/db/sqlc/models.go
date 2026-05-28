@@ -12,9 +12,9 @@ type Order struct {
 	ID               pgtype.UUID        `json:"id"`
 	TransactionID    pgtype.UUID        `json:"transaction_id"`
 	ProductID        pgtype.UUID        `json:"product_id"`
-	Quantity         int32              `json:"quantity"`
-	UnitPriceAmount  int32              `json:"unit_price_amount"`
-	TotalPriceAmount int32              `json:"total_price_amount"`
+	Quantity         int64              `json:"quantity"`
+	UnitPriceAmount  int64              `json:"unit_price_amount"`
+	TotalPriceAmount int64              `json:"total_price_amount"`
 	CurrencyCode     string             `json:"currency_code"`
 	Status           string             `json:"status"`
 	OrderedAt        pgtype.Timestamptz `json:"ordered_at"`
@@ -25,7 +25,7 @@ type Product struct {
 	ID           pgtype.UUID        `json:"id"`
 	Name         string             `json:"name"`
 	Description  string             `json:"description"`
-	PriceAmount  int32              `json:"price_amount"`
+	PriceAmount  int64              `json:"price_amount"`
 	CurrencyCode string             `json:"currency_code"`
 	IsActive     bool               `json:"is_active"`
 	CreatedAt    pgtype.Timestamptz `json:"created_at"`
@@ -34,15 +34,15 @@ type Product struct {
 
 type Stock struct {
 	ProductID        pgtype.UUID        `json:"product_id"`
-	Quantity         int32              `json:"quantity"`
-	ReservedQuantity int32              `json:"reserved_quantity"`
+	Quantity         int64              `json:"quantity"`
+	ReservedQuantity int64              `json:"reserved_quantity"`
 	CreatedAt        pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt        pgtype.Timestamptz `json:"updated_at"`
 }
 
 type Transaction struct {
 	ID               pgtype.UUID        `json:"id"`
-	TotalPriceAmount int32              `json:"total_price_amount"`
+	TotalPriceAmount int64              `json:"total_price_amount"`
 	CurrencyCode     string             `json:"currency_code"`
 	Status           string             `json:"status"`
 	CreatedAt        pgtype.Timestamptz `json:"created_at"`
