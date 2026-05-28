@@ -33,18 +33,22 @@ const (
 // reflection-formatted method names, remove the leading slash and convert the remaining slash to a
 // period.
 const (
-	// ProductServiceRegisterProductsProcedure is the fully-qualified name of the ProductService's
-	// RegisterProducts RPC.
-	ProductServiceRegisterProductsProcedure = "/product.v1.ProductService/RegisterProducts"
-	// ProductServiceListProductsProcedure is the fully-qualified name of the ProductService's
-	// ListProducts RPC.
-	ProductServiceListProductsProcedure = "/product.v1.ProductService/ListProducts"
+	// ProductServiceRegisterProductProcedure is the fully-qualified name of the ProductService's
+	// RegisterProduct RPC.
+	ProductServiceRegisterProductProcedure = "/product.v1.ProductService/RegisterProduct"
+	// ProductServiceGetActiveProductsCountProcedure is the fully-qualified name of the ProductService's
+	// GetActiveProductsCount RPC.
+	ProductServiceGetActiveProductsCountProcedure = "/product.v1.ProductService/GetActiveProductsCount"
+	// ProductServiceListActiveProductsProcedure is the fully-qualified name of the ProductService's
+	// ListActiveProducts RPC.
+	ProductServiceListActiveProductsProcedure = "/product.v1.ProductService/ListActiveProducts"
 )
 
 // ProductServiceClient is a client for the product.v1.ProductService service.
 type ProductServiceClient interface {
-	RegisterProducts(context.Context, *v1.RegisterProductsRequest) (*v1.RegisterProductsResponse, error)
-	ListProducts(context.Context, *v1.ListProductsRequest) (*v1.ListProductsResponse, error)
+	RegisterProduct(context.Context, *v1.RegisterProductRequest) (*v1.RegisterProductResponse, error)
+	GetActiveProductsCount(context.Context, *v1.GetActiveProductsCountRequest) (*v1.GetActiveProductsCountResponse, error)
+	ListActiveProducts(context.Context, *v1.ListActiveProductsRequest) (*v1.ListActiveProductsResponse, error)
 }
 
 // NewProductServiceClient constructs a client for the product.v1.ProductService service. By
@@ -58,16 +62,22 @@ func NewProductServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 	baseURL = strings.TrimRight(baseURL, "/")
 	productServiceMethods := v1.File_product_v1_product_proto.Services().ByName("ProductService").Methods()
 	return &productServiceClient{
-		registerProducts: connect.NewClient[v1.RegisterProductsRequest, v1.RegisterProductsResponse](
+		registerProduct: connect.NewClient[v1.RegisterProductRequest, v1.RegisterProductResponse](
 			httpClient,
-			baseURL+ProductServiceRegisterProductsProcedure,
-			connect.WithSchema(productServiceMethods.ByName("RegisterProducts")),
+			baseURL+ProductServiceRegisterProductProcedure,
+			connect.WithSchema(productServiceMethods.ByName("RegisterProduct")),
 			connect.WithClientOptions(opts...),
 		),
-		listProducts: connect.NewClient[v1.ListProductsRequest, v1.ListProductsResponse](
+		getActiveProductsCount: connect.NewClient[v1.GetActiveProductsCountRequest, v1.GetActiveProductsCountResponse](
 			httpClient,
-			baseURL+ProductServiceListProductsProcedure,
-			connect.WithSchema(productServiceMethods.ByName("ListProducts")),
+			baseURL+ProductServiceGetActiveProductsCountProcedure,
+			connect.WithSchema(productServiceMethods.ByName("GetActiveProductsCount")),
+			connect.WithClientOptions(opts...),
+		),
+		listActiveProducts: connect.NewClient[v1.ListActiveProductsRequest, v1.ListActiveProductsResponse](
+			httpClient,
+			baseURL+ProductServiceListActiveProductsProcedure,
+			connect.WithSchema(productServiceMethods.ByName("ListActiveProducts")),
 			connect.WithClientOptions(opts...),
 		),
 	}
@@ -75,22 +85,32 @@ func NewProductServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 
 // productServiceClient implements ProductServiceClient.
 type productServiceClient struct {
-	registerProducts *connect.Client[v1.RegisterProductsRequest, v1.RegisterProductsResponse]
-	listProducts     *connect.Client[v1.ListProductsRequest, v1.ListProductsResponse]
+	registerProduct        *connect.Client[v1.RegisterProductRequest, v1.RegisterProductResponse]
+	getActiveProductsCount *connect.Client[v1.GetActiveProductsCountRequest, v1.GetActiveProductsCountResponse]
+	listActiveProducts     *connect.Client[v1.ListActiveProductsRequest, v1.ListActiveProductsResponse]
 }
 
-// RegisterProducts calls product.v1.ProductService.RegisterProducts.
-func (c *productServiceClient) RegisterProducts(ctx context.Context, req *v1.RegisterProductsRequest) (*v1.RegisterProductsResponse, error) {
-	response, err := c.registerProducts.CallUnary(ctx, connect.NewRequest(req))
+// RegisterProduct calls product.v1.ProductService.RegisterProduct.
+func (c *productServiceClient) RegisterProduct(ctx context.Context, req *v1.RegisterProductRequest) (*v1.RegisterProductResponse, error) {
+	response, err := c.registerProduct.CallUnary(ctx, connect.NewRequest(req))
 	if response != nil {
 		return response.Msg, err
 	}
 	return nil, err
 }
 
-// ListProducts calls product.v1.ProductService.ListProducts.
-func (c *productServiceClient) ListProducts(ctx context.Context, req *v1.ListProductsRequest) (*v1.ListProductsResponse, error) {
-	response, err := c.listProducts.CallUnary(ctx, connect.NewRequest(req))
+// GetActiveProductsCount calls product.v1.ProductService.GetActiveProductsCount.
+func (c *productServiceClient) GetActiveProductsCount(ctx context.Context, req *v1.GetActiveProductsCountRequest) (*v1.GetActiveProductsCountResponse, error) {
+	response, err := c.getActiveProductsCount.CallUnary(ctx, connect.NewRequest(req))
+	if response != nil {
+		return response.Msg, err
+	}
+	return nil, err
+}
+
+// ListActiveProducts calls product.v1.ProductService.ListActiveProducts.
+func (c *productServiceClient) ListActiveProducts(ctx context.Context, req *v1.ListActiveProductsRequest) (*v1.ListActiveProductsResponse, error) {
+	response, err := c.listActiveProducts.CallUnary(ctx, connect.NewRequest(req))
 	if response != nil {
 		return response.Msg, err
 	}
@@ -99,8 +119,9 @@ func (c *productServiceClient) ListProducts(ctx context.Context, req *v1.ListPro
 
 // ProductServiceHandler is an implementation of the product.v1.ProductService service.
 type ProductServiceHandler interface {
-	RegisterProducts(context.Context, *v1.RegisterProductsRequest) (*v1.RegisterProductsResponse, error)
-	ListProducts(context.Context, *v1.ListProductsRequest) (*v1.ListProductsResponse, error)
+	RegisterProduct(context.Context, *v1.RegisterProductRequest) (*v1.RegisterProductResponse, error)
+	GetActiveProductsCount(context.Context, *v1.GetActiveProductsCountRequest) (*v1.GetActiveProductsCountResponse, error)
+	ListActiveProducts(context.Context, *v1.ListActiveProductsRequest) (*v1.ListActiveProductsResponse, error)
 }
 
 // NewProductServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -110,24 +131,32 @@ type ProductServiceHandler interface {
 // and JSON codecs. They also support gzip compression.
 func NewProductServiceHandler(svc ProductServiceHandler, opts ...connect.HandlerOption) (string, http.Handler) {
 	productServiceMethods := v1.File_product_v1_product_proto.Services().ByName("ProductService").Methods()
-	productServiceRegisterProductsHandler := connect.NewUnaryHandlerSimple(
-		ProductServiceRegisterProductsProcedure,
-		svc.RegisterProducts,
-		connect.WithSchema(productServiceMethods.ByName("RegisterProducts")),
+	productServiceRegisterProductHandler := connect.NewUnaryHandlerSimple(
+		ProductServiceRegisterProductProcedure,
+		svc.RegisterProduct,
+		connect.WithSchema(productServiceMethods.ByName("RegisterProduct")),
 		connect.WithHandlerOptions(opts...),
 	)
-	productServiceListProductsHandler := connect.NewUnaryHandlerSimple(
-		ProductServiceListProductsProcedure,
-		svc.ListProducts,
-		connect.WithSchema(productServiceMethods.ByName("ListProducts")),
+	productServiceGetActiveProductsCountHandler := connect.NewUnaryHandlerSimple(
+		ProductServiceGetActiveProductsCountProcedure,
+		svc.GetActiveProductsCount,
+		connect.WithSchema(productServiceMethods.ByName("GetActiveProductsCount")),
+		connect.WithHandlerOptions(opts...),
+	)
+	productServiceListActiveProductsHandler := connect.NewUnaryHandlerSimple(
+		ProductServiceListActiveProductsProcedure,
+		svc.ListActiveProducts,
+		connect.WithSchema(productServiceMethods.ByName("ListActiveProducts")),
 		connect.WithHandlerOptions(opts...),
 	)
 	return "/product.v1.ProductService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
-		case ProductServiceRegisterProductsProcedure:
-			productServiceRegisterProductsHandler.ServeHTTP(w, r)
-		case ProductServiceListProductsProcedure:
-			productServiceListProductsHandler.ServeHTTP(w, r)
+		case ProductServiceRegisterProductProcedure:
+			productServiceRegisterProductHandler.ServeHTTP(w, r)
+		case ProductServiceGetActiveProductsCountProcedure:
+			productServiceGetActiveProductsCountHandler.ServeHTTP(w, r)
+		case ProductServiceListActiveProductsProcedure:
+			productServiceListActiveProductsHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -137,10 +166,14 @@ func NewProductServiceHandler(svc ProductServiceHandler, opts ...connect.Handler
 // UnimplementedProductServiceHandler returns CodeUnimplemented from all methods.
 type UnimplementedProductServiceHandler struct{}
 
-func (UnimplementedProductServiceHandler) RegisterProducts(context.Context, *v1.RegisterProductsRequest) (*v1.RegisterProductsResponse, error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("product.v1.ProductService.RegisterProducts is not implemented"))
+func (UnimplementedProductServiceHandler) RegisterProduct(context.Context, *v1.RegisterProductRequest) (*v1.RegisterProductResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("product.v1.ProductService.RegisterProduct is not implemented"))
 }
 
-func (UnimplementedProductServiceHandler) ListProducts(context.Context, *v1.ListProductsRequest) (*v1.ListProductsResponse, error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("product.v1.ProductService.ListProducts is not implemented"))
+func (UnimplementedProductServiceHandler) GetActiveProductsCount(context.Context, *v1.GetActiveProductsCountRequest) (*v1.GetActiveProductsCountResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("product.v1.ProductService.GetActiveProductsCount is not implemented"))
+}
+
+func (UnimplementedProductServiceHandler) ListActiveProducts(context.Context, *v1.ListActiveProductsRequest) (*v1.ListActiveProductsResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("product.v1.ProductService.ListActiveProducts is not implemented"))
 }
