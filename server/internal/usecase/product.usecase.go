@@ -11,7 +11,9 @@ import (
 )
 
 type ProductUsecase interface {
-	ListProducts(ctx context.Context) ([]*entity.Product, error)
+	CreateProduct(ctx context.Context, product *entity.Product) (*entity.Product, error)
+	GetActiveProductsCount(ctx context.Context) (int64, error)
+	ListActiveProducts(ctx context.Context) ([]*entity.Product, error)
 }
 
 type ProductRepositoryFactory func(db sqlc.DBTX) domain.ProductRepository
@@ -34,12 +36,36 @@ func NewProductUsecase(
 	}
 }
 
-func (uc *productUsecase) ListProducts(ctx context.Context) ([]*entity.Product, error) {
+func (uc *productUsecase) CreateProduct(ctx context.Context, product *entity.Product) (*entity.Product, error) {
+	var newProduct *entity.Product
+	if err := uc.txManager.ReadWriteTransaction(ctx, func(ctx context.Context, tx sqlc.DBTX) error {
+		var err error
+		newProduct, err = uc.newRepo(tx).CreateOne(ctx, product)
+		return err
+	}); err != nil {
+		return nil, err
+	}
+	return newProduct, nil
+}
+
+func (uc *productUsecase) GetActiveProductsCount(ctx context.Context) (int64, error) {
+	var count int64
+	if err := uc.txManager.ReadOnlyTransaction(ctx, func(ctx context.Context, tx sqlc.DBTX) error {
+		products, err := uc.newRepo(tx).FindAllActiveProducts(ctx)
+		count = int64(len(products))
+		return err
+	}); err != nil {
+		return -1, err
+	}
+	return count, nil
+}
+
+func (uc *productUsecase) ListActiveProducts(ctx context.Context) ([]*entity.Product, error) {
 	// NOTE: memory allocation strategy is not good...
 	var products []*entity.Product
 	if err := uc.txManager.ReadOnlyTransaction(ctx, func(ctx context.Context, tx sqlc.DBTX) error {
 		var err error
-		products, err = uc.newRepo(tx).FindAll(ctx)
+		products, err = uc.newRepo(tx).FindAllActiveProducts(ctx)
 		return err
 	}); err != nil {
 		return nil, err
