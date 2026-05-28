@@ -7,8 +7,9 @@ import "google/protobuf/timestamp.proto";
 option go_package = "github.com/tyzerrr/aws-log-practice/server/gen/product/v1";
 
 service ProductService {
-  rpc RegisterProducts(RegisterProductsRequest) returns (RegisterProductsResponse);
-  rpc ListProducts(ListProductsRequest) returns (ListProductsResponse);
+  rpc RegisterProduct(RegisterProductRequest) returns (RegisterProductResponse);
+  rpc GetActiveProductsCount(GetActiveProductsCountRequest) returns (GetActiveProductsCountResponse);
+  rpc ListActiveProducts(ListActiveProductsRequest) returns (ListActiveProductsResponse);
 }
 
 message Product {
@@ -25,21 +26,28 @@ message Product {
 message ProductInput {
   string name = 1;
   string description = 2;
-  int32 price_amount = 3;
+  int64 price_amount = 3;
   string currency_code = 4;
   bool is_active = 5;
 }
 
-message RegisterProductsRequest {
-  repeated ProductInput products = 1;
+message RegisterProductRequest {
+  ProductInput product = 1;
 }
 
-message RegisterProductsResponse {
-  repeated Product products = 1;
+message RegisterProductResponse {
+  Product product = 1;
 }
 
-message ListProductsRequest {}
+message GetActiveProductsCountRequest {}
 
-message ListProductsResponse {
+message GetActiveProductsCountResponse {
+  int64 counts = 1;
+}
+
+
+message ListActiveProductsRequest {}
+
+message ListActiveProductsResponse {
   repeated Product products = 1;
 }
