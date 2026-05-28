@@ -7,5 +7,6 @@ import (
 )
 
 type ProductRepository interface {
-	FindAll(ctx context.Context) ([]*entity.Product, error)
+	CreateOne(ctx context.Context, product *entity.Product) (*entity.Product, error)
+	FindAllActiveProducts(ctx context.Context) ([]*entity.Product, error)
 }
