@@ -18,6 +18,10 @@ func NewProductRepository(db sqlc.DBTX) domain.ProductRepository {
 	}
 }
 
-func (pr *ProductRepository) FindAll(ctx context.Context) ([]*entity.Product, error) {
+func (r *ProductRepository) CreateOne(ctx context.Context, product *entity.Product) (*entity.Product, error) {
+	return nil, nil
+}
+
+func (pr *ProductRepository) FindAllActiveProducts(ctx context.Context) ([]*entity.Product, error) {
 	return nil, nil
 }
