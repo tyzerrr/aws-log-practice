@@ -5,6 +5,10 @@ resource "aws_ecs_cluster" "cluster" {
     name  = "containerInsights"
     value = "enabled"
   }
+
+  tags = {
+    Name = "${local.project}-${local.env}-ecs-cluster"
+  }
 }
 
 resource "aws_ecs_cluster_capacity_providers" "cluster_capacity_provider" {
