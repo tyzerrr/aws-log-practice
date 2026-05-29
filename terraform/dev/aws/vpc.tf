@@ -58,3 +58,22 @@ resource "aws_internet_gateway" "igw" {
     Name = "${local.project}-${local.env}-igw"
   }
 }
+
+resource "aws_eip" "eips" {
+  for_each = local.public_subnets
+  domain = "vpc"
+
+  tags = {
+    AvailabilityZone = each.value.availability_zone
+  }
+}
+
+resource "aws_nat_gateway" "nat_gateways" {
+  for_each = local.public_subnets
+  allocation_id = aws_eip.eips[each.key].allocation_id
+  subnet_id = aws_subnet.public_subnets[each.key].id
+
+  tags = {
+    AvailabilityZone = each.value.availability_zone
+  }
+}
