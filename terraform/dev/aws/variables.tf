@@ -20,3 +20,15 @@ variable "subnet_cidr_allocated_bit" {
   default     = 8
   description = "New allocated bit from VPC"
 }
+
+variable "github_organization" {
+  type = string
+  default = "tyzerrr"
+  description = "Github organization name"
+}
+
+variable "github_repository" {
+  type = string
+  default = "aws-log-practice"
+  description = "Github repository name"
+}
