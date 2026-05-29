@@ -51,3 +51,10 @@ resource "aws_subnet" "public_subnets" {
     Scope            = "public"
   }
 }
+
+resource "aws_internet_gateway" "igw" {
+  vpc_id = aws_vpc.vpc.id
+  tags = {
+    Name = "${local.project}-${local.env}-igw"
+  }
+}
