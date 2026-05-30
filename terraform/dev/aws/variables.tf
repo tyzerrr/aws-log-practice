@@ -22,13 +22,19 @@ variable "subnet_cidr_allocated_bit" {
 }
 
 variable "github_organization" {
-  type = string
-  default = "tyzerrr"
+  type        = string
+  default     = "tyzerrr"
   description = "Github organization name"
 }
 
 variable "github_repository" {
-  type = string
-  default = "aws-log-practice"
+  type        = string
+  default     = "aws-log-practice"
   description = "Github repository name"
+}
+
+variable "domain_name" {
+  type        = string
+  default     = "aws-log-practice.com"
+  description = "domain"
 }
