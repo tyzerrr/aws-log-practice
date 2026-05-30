@@ -1,7 +1,7 @@
 locals {
-  domain = "https://token.actions.githubusercontent.com"
+  domain                             = "https://token.actions.githubusercontent.com"
   openid_provider_configuration_path = "/.well-known/openid-configuration"
-  openid_configuration_url = "${local.domain}${local.openid_provider_configuration_path}"
+  openid_configuration_url           = "${local.domain}${local.openid_provider_configuration_path}"
 }
 
 data "http" "openid_configuration" {
