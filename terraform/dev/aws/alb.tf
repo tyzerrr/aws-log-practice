@@ -60,14 +60,18 @@ data "aws_iam_policy_document" "alb_log_bucket_policy_document" {
   statement {
     effect = "Allow"
     principals {
-      type        = "AWS"
-      identifiers = ["arn:aws:iam::582318560864:root"]
+      type        = "Service"
+      identifiers = ["logdelivery.elasticloadbalancing.amazonaws.com"]
     }
     actions = ["s3:PutObject"]
     resources = [
-      aws_s3_bucket.alb_log_bucket.arn,
-      "${aws_s3_bucket.alb_log_bucket.arn}/*"
+      "${aws_s3_bucket.alb_log_bucket.arn}/AWSLogs/${data.aws_caller_identity.caller_identity.account_id}/*"
     ]
+    condition {
+      test     = "ArnLike"
+      variable = "aws:SourceArn"
+      values   = ["arn:aws:elasticloadbalancing:${local.aws_region}:${data.aws_caller_identity.caller_identity.account_id}:loadbalancer/*"]
+    }
   }
 }
 
