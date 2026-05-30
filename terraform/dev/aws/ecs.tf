@@ -64,12 +64,11 @@ resource "aws_ecs_service" "service" {
     container_port   = local.http_port
   }
 
-  depends_on = [
-    aws_alb_listener.https_forward_listener
-  ]
-
   tags = {
-    Name = "${local.project}-${local.env}-ecs-service"
+    Name                           = "${local.project}-${local.env}-ecs-service"
+    HttpsListenerReady             = aws_alb_listener.https_forward_listener.arn
+    TaskExecutionPolicyAttachment  = aws_iam_role_policy_attachment.task_execution.id
+    PrivateSubnetDefaultRouteReady = join(",", [for route in aws_route.private_route : route.id])
   }
 }
 

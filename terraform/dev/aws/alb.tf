@@ -9,6 +9,11 @@ resource "aws_lb" "alb" {
     bucket  = aws_s3_bucket.alb_log_bucket.id
     enabled = true
   }
+
+  tags = {
+    Name                 = "${local.project}-${local.env}-alb"
+    LogBucketPolicyReady = aws_s3_bucket_policy.alb_log_bucket_policy.id
+  }
 }
 
 # ALB Log bucket
