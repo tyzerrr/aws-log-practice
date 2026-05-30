@@ -45,6 +45,34 @@ resource "aws_ecs_task_definition" "task_definition" {
   }
 }
 
+resource "aws_ecs_service" "service" {
+  name            = "${local.project}-${local.env}-ecs-service"
+  cluster         = aws_ecs_cluster.cluster.id
+  task_definition = aws_ecs_task_definition.task_definition.arn
+  desired_count   = 1
+  launch_type     = "FARGATE"
+
+  network_configuration {
+    subnets          = [for subnet in aws_subnet.private_subnets : subnet.id]
+    security_groups  = [aws_security_group.ecs_task_sg.id]
+    assign_public_ip = false
+  }
+
+  load_balancer {
+    target_group_arn = aws_alb_target_group.target_group.arn
+    container_name   = "nginx"
+    container_port   = local.http_port
+  }
+
+  depends_on = [
+    aws_alb_listener.https_forward_listener
+  ]
+
+  tags = {
+    Name = "${local.project}-${local.env}-ecs-service"
+  }
+}
+
 resource "aws_cloudwatch_log_group" "ecs" {
   name              = "/ecs/${local.project}-${local.env}"
   retention_in_days = 30
