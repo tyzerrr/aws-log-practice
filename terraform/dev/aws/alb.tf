@@ -125,7 +125,7 @@ resource "aws_alb_target_group" "target_group" {
   health_check {
     enabled             = true
     port                = local.http_port
-    path                = "/healthz"
+    path                = "/"
     interval            = 30
     healthy_threshold   = 2
     unhealthy_threshold = 2
