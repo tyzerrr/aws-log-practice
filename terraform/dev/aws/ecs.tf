@@ -66,9 +66,9 @@ resource "aws_ecs_service" "service" {
 
   tags = {
     Name                           = "${local.project}-${local.env}-ecs-service"
-    HttpsListenerReady             = aws_alb_listener.https_forward_listener.arn
+    HttpsListenerReady             = aws_alb_listener.https_forward_listener.id
     TaskExecutionPolicyAttachment  = aws_iam_role_policy_attachment.task_execution.id
-    PrivateSubnetDefaultRouteReady = join(",", [for route in aws_route.private_route : route.id])
+    PrivateSubnetDefaultRouteReady = join(":", [for route in aws_route.private_route : route.id])
   }
 }
 
