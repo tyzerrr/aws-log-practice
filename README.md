@@ -66,8 +66,72 @@ ECS Fargate と RDS for PostgreSQL を用いたアプリケーション基盤を
 - React
 - TypeScript
 - Tailwind CSS
+- ShadCN UI style components
+- TanStack Query
+- ConnectRPC
 - Biome
 - pnpm
+
+## Local Development
+
+ローカルで動かす場合は、DB、backend、frontend をそれぞれ起動します。
+以下のコマンドは、特記がない限りリポジトリルートで実行します。
+
+### 1. Database
+
+PostgreSQL を Docker Compose で起動します。
+
+```bash
+make db-up
+```
+
+初回、または migration を更新した後は schema を適用します。
+
+```bash
+make db-apply
+```
+
+DB を停止して volume も削除する場合:
+
+```bash
+make db-down
+```
+
+### 2. Backend
+
+backend は ConnectRPC の HTTP server として起動します。
+`DATABASE_URL` と `SERVER_PORT` が必要です。
+
+```bash
+DATABASE_URL="postgres://aws-log-practice:aws-log-practice@localhost:5432/aws-log-practice?sslmode=disable" \
+SERVER_PORT=8080 \
+go run ./server/cmd/server
+```
+
+起動後、backend は `http://localhost:8080` で待ち受けます。
+
+### 3. Frontend
+
+frontend は `web/` で依存関係を入れてから Next.js dev server を起動します。
+
+```bash
+cd web
+corepack pnpm install
+corepack pnpm run dev
+```
+
+起動後、frontend は `http://localhost:3000` で確認できます。
+
+### Generated Code
+
+Protocol Buffers を変更した場合は、backend と frontend の生成コードを更新します。
+
+```bash
+make buf-gen
+
+cd web
+corepack pnpm run proto:gen
+```
 
 ## Infrastructure
 
