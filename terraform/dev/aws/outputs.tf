@@ -23,6 +23,10 @@ output "db_port" {
   value = aws_db_instance.primary.port
 }
 
+output "http_port" {
+  value = local.http_port
+}
+
 output "primary_db_name" {
   value = aws_db_instance.primary.db_name
 }

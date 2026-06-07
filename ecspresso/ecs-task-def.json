@@ -26,7 +26,7 @@
       "environment": [
         {
           "name": "SERVER_PORT",
-          "value": "80"
+          "value": "{{ tfstate `output.http_port` }}"
         },
         {
           "name": "DB_HOST",
