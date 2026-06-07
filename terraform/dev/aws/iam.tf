@@ -64,3 +64,74 @@ resource "aws_iam_role_policy" "github_actions_ecr_push" {
     ]
   })
 }
+
+resource "aws_iam_role_policy" "github_actions_ecspresso_run" {
+  name = "${local.project}-${local.env}-github-actions-ecspresso-run"
+  role = aws_iam_role.role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject"
+        ]
+        Resource = "${aws_s3_bucket.remote_backend.arn}/terraform/dev/aws/terraform.state"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:ListBucket"
+        ]
+        Resource = aws_s3_bucket.remote_backend.arn
+        Condition = {
+          StringLike = {
+            "s3:prefix" = "terraform/dev/aws/terraform.state"
+          }
+        }
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "ecs:DescribeClusters",
+          "ecs:DescribeServices",
+          "ecs:DescribeTaskDefinition",
+          "ecs:DescribeTasks",
+          "ecs:ListTasks",
+          "ecs:RegisterTaskDefinition",
+          "ecs:RunTask",
+          "ecs:TagResource"
+        ]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "iam:PassRole"
+        ]
+        Resource = [
+          aws_iam_role.task.arn,
+          aws_iam_role.task_execution.arn
+        ]
+        Condition = {
+          StringEquals = {
+            "iam:PassedToService" = "ecs-tasks.amazonaws.com"
+          }
+        }
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:DescribeLogStreams",
+          "logs:FilterLogEvents",
+          "logs:GetLogEvents"
+        ]
+        Resource = [
+          aws_cloudwatch_log_group.ecs.arn,
+          "${aws_cloudwatch_log_group.ecs.arn}:*"
+        ]
+      }
+    ]
+  })
+}
