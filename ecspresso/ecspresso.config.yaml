@@ -1,0 +1,11 @@
+region: ap-northeast-1
+cluster: aws-log-practice-dev-ecs-cluster
+service: aws-log-practice-dev-ecs-service
+service_definition: ecs-service-def.json
+task_definition: ecs-task-def.json
+timeout: "10m0s"
+
+plugins:
+  - name: tfstate
+    config:
+      url: s3://aws-log-practice-remote-backend-dev/terraform/dev/aws/terraform.state

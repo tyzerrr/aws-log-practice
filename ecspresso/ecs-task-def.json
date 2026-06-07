@@ -1,0 +1,85 @@
+{
+  "containerDefinitions": [
+    {
+      "cpu": 1024,
+      "essential": true,
+      "image": "{{ must_env `IMAGE_URI` }}",
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "{{ tfstate `aws_cloudwatch_log_group.ecs.name` }}",
+          "awslogs-region": "ap-northeast-1",
+          "awslogs-stream-prefix": "app"
+        }
+      },
+      "memory": 2048,
+      "name": "nginx",
+      "portMappings": [
+        {
+          "appProtocol": "",
+          "containerPort": 80,
+          "hostPort": 80,
+          "protocol": "tcp"
+        }
+      ],
+      "versionConsistency": "",
+      "environment": [
+        {
+          "name": "DB_HOST",
+          "value": "{{ tfstate `output.db_primary_host` }}"
+        },
+        {
+          "name": "DB_READ_HOST",
+          "value": "{{ tfstate `output.db_read_replica_host` }}"
+        },
+        {
+          "name": "DB_PORT",
+          "value": "{{ tfstate `output.db_port` }}"
+        },
+        {
+          "name": "DB_NAME",
+          "value": "{{ tfstate `output.primary_db_name` }}"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "DB_USER",
+          "valueFrom": "{{ tfstate `output.db_app_secret_arn` }}:username::"
+        },
+        {
+          "name": "DB_PASSWORD",
+          "valueFrom": "{{ tfstate `output.db_app_secret_arn` }}:password::"
+        }
+      ]
+    }
+  ],
+  "cpu": "1024",
+  "executionRoleArn": "{{ tfstate `aws_iam_role.task_execution.arn` }}",
+  "family": "aws-log-practice-dev-ecs-task",
+  "ipcMode": "",
+  "memory": "2048",
+  "networkMode": "awsvpc",
+  "pidMode": "",
+  "requiresCompatibilities": [
+    "FARGATE"
+  ],
+  "tags": [
+    {
+      "key": "Project",
+      "value": "aws-log-practice"
+    },
+    {
+      "key": "ManagedBy",
+      "value": "terraform"
+    },
+    {
+      "key": "Env",
+      "value": "dev"
+    },
+    {
+      "key": "Name",
+      "value": "aws-log-practice-dev-ecs-task"
+    }
+  ],
+  "taskRoleArn": "{{ tfstate `aws_iam_role.task.arn` }}"
+}

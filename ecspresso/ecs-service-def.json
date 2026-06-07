@@ -1,0 +1,75 @@
+{
+  "availabilityZoneRebalancing": "ENABLED",
+  "deploymentConfiguration": {
+    "bakeTimeInMinutes": 0,
+    "deploymentCircuitBreaker": {
+      "enable": false,
+      "rollback": false
+    },
+    "maximumPercent": 200,
+    "minimumHealthyPercent": 100,
+    "strategy": "ROLLING"
+  },
+  "deploymentController": {
+    "type": "ECS"
+  },
+  "desiredCount": 1,
+  "enableECSManagedTags": false,
+  "enableExecuteCommand": false,
+  "healthCheckGracePeriodSeconds": 0,
+  "launchType": "FARGATE",
+  "loadBalancers": [
+    {
+      "containerName": "nginx",
+      "containerPort": 80,
+      "targetGroupArn": "{{ tfstate `aws_alb_target_group.target_group.arn` }}"
+    }
+  ],
+  "networkConfiguration": {
+    "awsvpcConfiguration": {
+      "assignPublicIp": "DISABLED",
+      "securityGroups": [
+        "{{ tfstate `aws_security_group.ecs_task_sg.id` }}"
+      ],
+      "subnets": [
+        "{{ tfstate `aws_subnet.private_subnets['ap-northeast-1a'].id` }}",
+        "{{ tfstate `aws_subnet.private_subnets['ap-northeast-1c'].id` }}"
+      ]
+    }
+  },
+  "platformFamily": "Linux",
+  "platformVersion": "LATEST",
+  "propagateTags": "NONE",
+  "resourceManagementType": "CUSTOMER",
+  "schedulingStrategy": "REPLICA",
+  "tags": [
+    {
+      "key": "PrivateSubnetDefaultRouteReady",
+      "value": "{{ tfstate `aws_route.private_route['ap-northeast-1a'].id` }}:{{ tfstate `aws_route.private_route['ap-northeast-1c'].id` }}"
+    },
+    {
+      "key": "Project",
+      "value": "aws-log-practice"
+    },
+    {
+      "key": "ManagedBy",
+      "value": "terraform"
+    },
+    {
+      "key": "HttpsListenerReady",
+      "value": "{{ tfstate `aws_alb_listener.https_forward_listener.id` }}"
+    },
+    {
+      "key": "TaskExecutionPolicyAttachment",
+      "value": "{{ tfstate `aws_iam_role_policy_attachment.task_execution.id` }}"
+    },
+    {
+      "key": "Env",
+      "value": "dev"
+    },
+    {
+      "key": "Name",
+      "value": "aws-log-practice-dev-ecs-service"
+    }
+  ]
+}
