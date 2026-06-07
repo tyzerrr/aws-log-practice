@@ -113,6 +113,8 @@ GitHub Actions の `.github/workflows/migrate-db.yml` は次の順序で動き�
 
 GitHub Actions には DB password を渡しません。`DB_ADMIN_CREDENTIAL_ID` は Secrets Manager の secret name である `aws-log-practice/dev/db/admin` を workflow 内に固定値として置きます。ECS task role が実行時に Secrets Manager から admin credential を読みます。
 
+初回 bootstrap のように RDS にまだ migration が適用されていない場合は、`workflow_dispatch` で `force_run=true` にし、`migration_base_version` は空のまま実行します。これにより空の shadow database と remote RDS を比較してから、pending migration をすべて適用します。既存 schema に対して追加 migration だけを適用する通常運用では、CI が新規 migration file から base version を自動算出します。
+
 ## Frontend
 
 `web/` は Next.js の frontend アプリケーションです。

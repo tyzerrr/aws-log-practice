@@ -22,7 +22,7 @@ on:
         default: false
         type: boolean
       migration_base_version:
-        description: "Base migration version for forced drift check. Leave empty to compare against the latest committed migration before new additions."
+        description: "Base migration version for forced drift check. Leave empty to bootstrap from an empty schema."
         required: false
         default: ""
         type: string
@@ -90,9 +90,6 @@ jobs:
           MIGRATION_BASE_VERSION="${{ needs.detect_new_migrations.outputs.base_version }}"
           if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" && -n "${{ inputs.migration_base_version }}" ]]; then
             MIGRATION_BASE_VERSION="${{ inputs.migration_base_version }}"
-          fi
-          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" && "${{ inputs.force_run }}" == "true" && -z "${MIGRATION_BASE_VERSION}" ]]; then
-            MIGRATION_BASE_VERSION="$(git ls-files 'db/migrations/*.sql' | sed -E 's#^.*/([0-9]+)_.+$#\1#' | sort | tail -n 1)"
           fi
           echo "MIGRATION_BASE_VERSION=${MIGRATION_BASE_VERSION}" >> "$GITHUB_ENV"
 

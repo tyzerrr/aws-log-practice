@@ -45,6 +45,8 @@ ecspresso run \
 
 `DB_ADMIN_CREDENTIAL_ID` は password ではなく Secrets Manager の secret ID です。RDS host、port、DB name、subnet、security group、log group、ECS role は ecspresso が Terraform state から読みます。
 
+初回 bootstrap で RDS にまだ migration が入っていない場合、`MIGRATION_BASE_VERSION` は空にします。空の shadow database と remote RDS を比較し、drift がなければ `apply_db_migration` で pending migration をすべて適用します。
+
 ## CI での順序
 
 GitHub Actions から実行する場合は、次の順序にします。
