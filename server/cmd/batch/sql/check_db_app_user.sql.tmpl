@@ -1,0 +1,57 @@
+WITH table_privileges AS (
+  SELECT
+    'table' AS target_type,
+    format('%I.%I', schemaname, tablename) AS target_name,
+    privilege,
+    has_table_privilege(current_user, format('%I.%I', schemaname, tablename), privilege) AS ok
+  FROM pg_catalog.pg_tables
+  CROSS JOIN (
+    VALUES
+      ('SELECT'),
+      ('INSERT'),
+      ('UPDATE'),
+      ('DELETE')
+  ) AS required_table_privileges(privilege)
+  WHERE schemaname = {{ .SchemaLiteral }}
+),
+sequence_privileges AS (
+  SELECT
+    'sequence' AS target_type,
+    format('%I.%I', schemaname, sequencename) AS target_name,
+    privilege,
+    has_sequence_privilege(current_user, format('%I.%I', schemaname, sequencename), privilege) AS ok
+  FROM pg_catalog.pg_sequences
+  CROSS JOIN (
+    VALUES
+      ('USAGE'),
+      ('SELECT'),
+      ('UPDATE')
+  ) AS required_sequence_privileges(privilege)
+  WHERE schemaname = {{ .SchemaLiteral }}
+),
+required_privileges AS (
+  SELECT
+    'database' AS target_type,
+    {{ .DatabaseLiteral }} AS target_name,
+    'CONNECT' AS privilege,
+    has_database_privilege(current_user, {{ .DatabaseLiteral }}, 'CONNECT') AS ok
+  UNION ALL
+  SELECT
+    'schema' AS target_type,
+    {{ .SchemaLiteral }} AS target_name,
+    'USAGE' AS privilege,
+    has_schema_privilege(current_user, {{ .SchemaLiteral }}, 'USAGE') AS ok
+  UNION ALL
+  SELECT target_type, target_name, privilege, ok FROM table_privileges
+  UNION ALL
+  SELECT target_type, target_name, privilege, ok FROM sequence_privileges
+)
+SELECT
+  current_user AS username,
+  current_database() AS database_name,
+  target_type,
+  target_name,
+  privilege,
+  ok
+FROM required_privileges
+ORDER BY target_type, target_name, privilege;

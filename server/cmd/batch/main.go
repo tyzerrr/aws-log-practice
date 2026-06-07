@@ -25,13 +25,15 @@ func main() {
 
 func realMain(ctx context.Context) error {
 	if len(os.Args) != 2 {
-		return fmt.Errorf("usage: go run ${ROOT of aws-log-practice}/server/cmd/batch/ [create_db_app_user]")
+		return fmt.Errorf("usage: go run ${ROOT of aws-log-practice}/server/cmd/batch/ [create_db_app_user|check_db_app_user]")
 	}
 	var err error
 
 	switch os.Args[1] {
 	case "create_db_app_user":
 		err = CreateDBAppUser(ctx)
+	case "check_db_app_user":
+		err = CheckDBAppUser(ctx)
 	default:
 		err = fmt.Errorf("invalid command: %s", os.Args[1])
 	}
