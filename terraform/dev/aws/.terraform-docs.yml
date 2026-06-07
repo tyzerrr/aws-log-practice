@@ -1,0 +1,25 @@
+formatter: markdown table
+
+sections:
+  show:
+    - requirements
+    - providers
+    - inputs
+    - outputs
+
+sort:
+  enabled: true
+  by: name
+
+settings:
+  anchor: true
+  default: true
+  description: true
+  escape: true
+  hide-empty: true
+  html: true
+  indent: 2
+  read-comments: true
+  required: true
+  sensitive: true
+  type: true

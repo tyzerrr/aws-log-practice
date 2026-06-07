@@ -7,6 +7,7 @@ BIN_DIR := $(abspath ./bin)
 DB_PORT ?= 5432
 DATABASE_URL ?= postgres://aws-log-practice:aws-log-practice@localhost:$(DB_PORT)/aws-log-practice?sslmode=disable
 ATLAS := $(BIN_DIR)/atlas
+TERRAFORM_DOCS_IMAGE ?= quay.io/terraform-docs/terraform-docs:0.20.0
 
 .PHONY: setup
 setup:
@@ -42,3 +43,15 @@ sqlc:
 .PHONY: buf-gen
 buf-gen:
 	@buf generate
+
+.PHONY: terraform-docs
+terraform-docs:
+	@docker run --rm \
+		-v "$(CURDIR):/workspace" \
+		-w /workspace/terraform/dev/aws \
+		$(TERRAFORM_DOCS_IMAGE) \
+		markdown table \
+		--config .terraform-docs.yml \
+		--output-file README.md \
+		--output-mode inject \
+		.
