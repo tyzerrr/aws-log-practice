@@ -115,6 +115,10 @@ GitHub Actions には DB password を渡しません。`DB_ADMIN_CREDENTIAL_ID` 
 
 初回 bootstrap のように RDS にまだ migration が適用されていない場合は、`workflow_dispatch` で `force_run=true` にし、`migration_base_version` は空のまま実行します。これにより空の shadow database と remote RDS を比較してから、pending migration をすべて適用します。既存 schema に対して追加 migration だけを適用する通常運用では、CI が新規 migration file から base version を自動算出します。
 
+dev 環境では initial migration `20260527204929_initial_schema.sql` を RDS に適用済みです。`MIGRATION_BASE_VERSION=20260527204929` の drift check が成功し、その後 `check_db_app_user` が `checks_count=18` で成功しています。
+
+migration で新しい table / sequence を追加した後は、application 用 DB user の既存 object 権限を同期するために `create_db_app_user` を再実行し、続けて `check_db_app_user` で確認します。
+
 ## Frontend
 
 `web/` は Next.js の frontend アプリケーションです。

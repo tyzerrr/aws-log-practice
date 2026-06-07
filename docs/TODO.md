@@ -5,32 +5,31 @@
 - Terraform で dev 環境の VPC、private/public subnet、ALB、ECS Fargate、ECR、RDS for PostgreSQL、Secrets Manager、CloudWatch Logs、GitHub Actions OIDC role を管理している。
 - ecspresso を導入済み。ECS service と one-shot batch task は ecspresso が Terraform state を参照して実行定義を組み立てる。
 - `create_db_app_user` batch は ECS one-shot task として実行済み。Secrets Manager の admin/app credential を読み、application 用 DB user を作成または更新できる。
-- `check_db_app_user` batch は ECS one-shot task として実行済み。application 用 DB user で RDS に接続でき、現時点で確認可能な database/schema 権限は通っている。
+- `check_db_app_user` batch は ECS one-shot task として実行済み。application 用 DB user で RDS に接続でき、database / schema / table 権限チェックが `checks_count=18` で成功している。
 - Batch image は GitHub Actions から ECR に push できる。tag は `batch-<batch-name>-<short-sha>-<yyyymmddHHMMSS>` 形式。
-- Atlas migration 用の ECS one-shot task definition と GitHub Actions workflow を追加済み。GitHub Actions は migration file を検知し、migration image を ECR に push し、ecspresso 経由で drift check と migration apply を実行する。
+- Atlas migration 用の ECS one-shot task definition と GitHub Actions workflow を追加済み。GitHub Actions から migration image を ECR に push し、ecspresso 経由で drift check と migration apply を実行できる。
+- RDS primary database には initial migration `20260527204929_initial_schema.sql` を適用済み。`MIGRATION_BASE_VERSION=20260527204929` の drift check も成功している。
 
-## P0: RDS Migration CI を適用して確認する
+## Done: RDS Migration CI / App User 権限確認
 
-現状の `check_db_app_user` は `checks_count=2` で成功している。これは application 用 DB user が DB に接続でき、`public` schema を使えることは確認できているという意味。
+RDS migration を ECS one-shot task として実行する流れは確認済み。
 
-一方で、`products` / `stocks` / `transactions` / `orders` などの table 権限チェックはまだ出ていない。RDS 上に application schema が未適用、または対象 table がまだ存在しない状態と考えられる。
+完了したこと:
 
-migration one-shot task と CI workflow の実装は入っているが、AWS 側へ Terraform の IAM 変更を apply し、実際の GitHub Actions / ecspresso 実行で確認する作業が残っている。
+- GitHub OIDC role に ecspresso run 用の IAM policy を追加した。
+- GitHub Actions workflow `.github/workflows/migrate-db.yml` を追加した。
+- migration image を `batch-migrate-db-<short-sha>-<yyyymmddHHMMSS>` tag で ECR に push できる。
+- `check_db_migration_drift` task で shadow database と remote RDS の schema drift を確認できる。
+- `apply_db_migration` task で Atlas migration を RDS に適用できる。
+- initial migration 適用後、`MIGRATION_BASE_VERSION=20260527204929` の drift check が成功した。
+- migration 適用後に `check_db_app_user` を実行し、`checks_count=18` で application 用 DB user の権限チェックが成功した。
 
-やること:
+運用上の注意:
 
-- Terraform apply で GitHub OIDC role に ecspresso run 用の権限を反映する。
 - `DB_ADMIN_CREDENTIAL_ID` は DB password ではなく Secrets Manager の secret name なので、CI workflow 内の固定値 `aws-log-practice/dev/db/admin` を使う。
-- migration workflow を実行し、drift check と `atlas migrate apply` が成功することを確認する。
-- migration 実行後に `create_db_app_user` を再実行し、既存 table / sequence への GRANT を反映する。
-- その後 `check_db_app_user` を再実行し、table 権限の check が増えてすべて成功することを確認する。
-
-完了条件:
-
-- RDS に application table が作成されている。
-- GitHub Actions の migration workflow が `batch-migrate-db-<short-sha>-<yyyymmddHHMMSS>` image を ECR に push し、ECS one-shot task を完走できる。
-- `check_db_app_user` の `checks_count` が database/schema だけでなく table 権限分も含む数になる。
-- `SELECT` / `INSERT` / `UPDATE` / `DELETE` が対象 table ですべて成功している。
+- 初回 bootstrap では `workflow_dispatch` の `force_run=true` を使い、`migration_base_version` は空のままにする。
+- 追加 migration の通常運用では、CI が追加 migration file から base version を自動算出する。
+- migration で新しい table / sequence が増えた場合は、`create_db_app_user` を再実行して既存 object への GRANT を反映し、その後 `check_db_app_user` で確認する。
 
 ## P1: Backend Application の RDS 接続方式を ECS 環境変数に合わせる
 
