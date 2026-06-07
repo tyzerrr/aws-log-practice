@@ -107,6 +107,26 @@ resource "aws_iam_role_policy_attachment" "task_execution" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
+# ECS task definitionにsecretを注入するために必要
+# AWS IAM Roleに複数のIAM Role Policyは紐付けできる
+resource "aws_iam_role_policy" "task_execution_read_app_db_secret" {
+  name = "${local.project}-${local.env}-task-exec-read-app-db-secret"
+  role = aws_iam_role.task_execution.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "secretsmanager:GetSecretValue"
+        ]
+        Resource = aws_secretsmanager_secret.db_app.arn
+      }
+    ]
+  })
+}
+
 # Task Role
 # 最初はnginxをたてるだけで、ECS exec設定するまでssmの権限もいらない
 resource "aws_iam_role" "task" {
