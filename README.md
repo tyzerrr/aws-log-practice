@@ -60,6 +60,8 @@ ECS Fargate と RDS for PostgreSQL を用いたアプリケーション基盤を
 - Protocol Buffers
 - Connect-Go
 
+backend application は ECS Fargate に deploy します。Dockerfile は `server/cmd/server/Dockerfile` です。BuildKit の bind mount と multi-stage build で Go binary を作成し、runtime image には `gcr.io/distroless/static-debian13` を使います。
+
 ## Batch Tasks
 
 `server/cmd/batch` には、ECS one-shot task として実行する運用 batch を置いています。
@@ -249,11 +251,14 @@ Application image と batch image は同じ ECR repository に push しますが
 - application: `app-<short-sha>-<yyyymmddHHMMSS>`
 - batch: `batch-<batch-name>-<short-sha>-<yyyymmddHHMMSS>`
 
-batch image の例:
+image tag の例:
 
 ```text
+aws-log-practice-dev-ecr-repository:app-c1d5db9-20260607143000
 aws-log-practice-dev-ecr-repository:batch-create-db-app-user-128f310-20260607114532
 aws-log-practice-dev-ecr-repository:batch-migrate-db-56f3535-20260607133000
 ```
+
+`.github/workflows/build-and-push-container-image.yml` は backend application image を buildx で build し、ECR に push した後、ecspresso deploy で ECS service を更新します。GitHub Actions の OIDC role には ECR push、Terraform state 読み取り、ECS task definition 登録、ECS service 更新、CloudWatch Logs 参照に必要な権限を付けています。
 
 DB credential rotation / sync は、Terraform で RDS master password と admin secret の version を揃えて更新し、その後 `create_db_app_user` batch を実行して application 用 user の password と権限を更新する流れです。application は admin credential を使わず、Secrets Manager の app credential だけで接続します。
