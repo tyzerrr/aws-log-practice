@@ -63,6 +63,9 @@ func handleCheckDBMigrationDrift(ctx context.Context, logger *slog.Logger) error
 	}
 	targetURL := dbMigrationTargetURL(cfg, dbAdminCredential)
 
+	if err := ensurePostgresDatabase(ctx, cfg.ShadowDatabaseURL, cfg.ShadowMaintenanceDBName); err != nil {
+		return fmt.Errorf("failed to prepare shadow database: %w", err)
+	}
 	if err := ensurePostgresDatabase(ctx, cfg.DevDatabaseURL, cfg.ShadowMaintenanceDBName); err != nil {
 		return fmt.Errorf("failed to prepare atlas dev database: %w", err)
 	}
