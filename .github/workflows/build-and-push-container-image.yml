@@ -17,9 +17,9 @@ jobs:
       - name: Get image tag
         id: get-image-tag
         run: |
-          SHORT_COMMIT_ID=`git rev-parse --short HEAD`
-          TIMESTAMP=$(date)
-          image-tag="${SHORT_COMMIT_ID}-${TIMESTAMP}" >> $GITHUB_OUTPUT
+          SHORT_COMMIT_ID=$(git rev-parse --short HEAD)
+          TIMESTAMP=$(date -u +%Y%m%d%H%M%S)
+          echo "image-tag=${SHORT_COMMIT_ID}-${TIMESTAMP}" >> "$GITHUB_OUTPUT"
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v6.1.0
         with:
@@ -34,4 +34,4 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           push: true
-          tags: ${{ steps.login-ecr.outputs.registry }}/aws-log-practice-${{ steps.get-image-tag.outputs.image-tag }}
+          tags: ${{ steps.login-ecr.outputs.registry }}/aws-log-practice-dev-ecr-repository:${{ steps.get-image-tag.outputs.image-tag }}

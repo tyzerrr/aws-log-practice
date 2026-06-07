@@ -1,0 +1,20 @@
+DO $create_db_app_user$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_catalog.pg_roles
+    WHERE rolname = {{ .UsernameLiteral }}
+  ) THEN
+    CREATE ROLE {{ .UsernameIdent }} WITH LOGIN PASSWORD {{ .PasswordLiteral }};
+  ELSE
+    ALTER ROLE {{ .UsernameIdent }} WITH LOGIN PASSWORD {{ .PasswordLiteral }};
+  END IF;
+END
+$create_db_app_user$;
+
+GRANT CONNECT ON DATABASE {{ .DatabaseIdent }} TO {{ .UsernameIdent }};
+GRANT USAGE ON SCHEMA {{ .SchemaIdent }} TO {{ .UsernameIdent }};
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA {{ .SchemaIdent }} TO {{ .UsernameIdent }};
+GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA {{ .SchemaIdent }} TO {{ .UsernameIdent }};
+ALTER DEFAULT PRIVILEGES IN SCHEMA {{ .SchemaIdent }} GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO {{ .UsernameIdent }};
+ALTER DEFAULT PRIVILEGES IN SCHEMA {{ .SchemaIdent }} GRANT USAGE, SELECT, UPDATE ON SEQUENCES TO {{ .UsernameIdent }};
