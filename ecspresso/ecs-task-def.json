@@ -25,6 +25,10 @@
       "versionConsistency": "",
       "environment": [
         {
+          "name": "SERVER_PORT",
+          "value": "80"
+        },
+        {
           "name": "DB_HOST",
           "value": "{{ tfstate `output.db_primary_host` }}"
         },
