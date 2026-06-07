@@ -51,9 +51,11 @@ resource "aws_db_subnet_group" "rds" {
 # DB admin用: Rotation担当のLambdaのみがつかう
 ephemeral "aws_secretsmanager_random_password" "db_admin" {
   password_length = 32
+  exclude_punctuation = true
 }
 
 # Applicationがコネクション確立時に利用する
 ephemeral "aws_secretsmanager_random_password" "db_app" {
   password_length = 32
+  exclude_punctuation = true
 }
