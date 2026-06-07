@@ -32,3 +32,35 @@ data "aws_iam_policy_document" "aws_role_policy" {
 resource "aws_iam_role" "role" {
   assume_role_policy = data.aws_iam_policy_document.aws_role_policy.json
 }
+
+resource "aws_iam_role_policy" "github_actions_ecr_push" {
+  name = "${local.project}-${local.env}-github-actions-ecr-push"
+  role = aws_iam_role.role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ecr:GetAuthorizationToken"
+        ]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:BatchGetImage",
+          "ecr:CompleteLayerUpload",
+          "ecr:DescribeRepositories",
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:InitiateLayerUpload",
+          "ecr:PutImage",
+          "ecr:UploadLayerPart"
+        ]
+        Resource = aws_ecr_repository.ecr.arn
+      }
+    ]
+  })
+}
