@@ -21,7 +21,7 @@ ECS Fargate と RDS for PostgreSQL を用いたアプリケーション基盤を
 ├── db/                       # DB migration と SQL query
 │   ├── migrations/
 │   └── query/
-├── docs/                     # 設計メモ、TODO
+├── docs/                     # 設計メモ、runbook、TODO
 ├── proto/                    # Protocol Buffers 定義
 ├── server/                   # Go backend
 │   ├── cmd/batch/            # ECS one-shot batch entrypoint
@@ -245,6 +245,8 @@ corepack pnpm run proto:gen
 ## Deploy And Operations
 
 ECS service と one-shot task の task definition / service definition は ecspresso で管理します。Terraform は VPC、RDS、ECS cluster、IAM role、ECR、CloudWatch Logs などのインフラを管理し、ecspresso は Terraform state の値を参照して ECS の実行定義を組み立てます。
+
+運用手順は [docs/runbook.md](docs/runbook.md) にまとめています。現在は DB credential rotation と application 用 DB user の権限同期手順を記載しています。
 
 Application image と batch image は同じ ECR repository に push しますが、tag prefix で用途を分けています。
 
