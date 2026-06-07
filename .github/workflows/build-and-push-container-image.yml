@@ -1,36 +1,88 @@
 name: build-and-push-container-image.yml
+
 on:
   push:
     branches:
       - main
+    paths:
+      - ".github/workflows/build-and-push-container-image.yml"
+      - "ecspresso/ecspresso.config.yaml"
+      - "ecspresso/ecs-service-def.json"
+      - "ecspresso/ecs-task-def.json"
+      - "go.mod"
+      - "go.sum"
+      - "server/**"
+  workflow_dispatch:
+
 permissions:
   id-token: write
   contents: read
 
+env:
+  AWS_REGION: ap-northeast-1
+  ECR_REPOSITORY: aws-log-practice-dev-ecr-repository
+
 jobs:
-  build-and-push-container-image:
+  build-push-and-deploy-container-image:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+
       - name: Get image tag
         id: get-image-tag
         run: |
           SHORT_COMMIT_ID=$(git rev-parse --short HEAD)
           TIMESTAMP=$(date -u +%Y%m%d%H%M%S)
           echo "image-tag=app-${SHORT_COMMIT_ID}-${TIMESTAMP}" >> "$GITHUB_OUTPUT"
+
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v6.1.0
         with:
           role-to-assume: ${{ secrets.IAM_ARN_TO_PUSH_CONTAINER_IMAGE }}
-          aws-region: "ap-northeast-1"
+          aws-region: ${{ env.AWS_REGION }}
+
       - name: Login to ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
         with:
           mask-password: "true"
-      - name: Build and push image to Amazon ECR
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push application image to Amazon ECR
         uses: docker/build-push-action@v7
         with:
+          context: .
+          file: server/cmd/server/Dockerfile
+          platforms: linux/amd64
           push: true
-          tags: ${{ steps.login-ecr.outputs.registry }}/aws-log-practice-dev-ecr-repository:${{ steps.get-image-tag.outputs.image-tag }}
+          tags: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ steps.get-image-tag.outputs.image-tag }}
+          labels: |
+            org.opencontainers.image.title=aws-log-practice-backend
+            org.opencontainers.image.description=Backend application image for ECS service
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            com.aws-log-practice.image.kind=application
+            com.aws-log-practice.application.name=backend
+
+      - name: Install ecspresso
+        uses: kayac/ecspresso@v2
+        with:
+          version: v2.8.2
+
+      - name: Deploy ECS service
+        working-directory: ecspresso
+        env:
+          IMAGE_URI: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ steps.get-image-tag.outputs.image-tag }}
+        run: |
+          ecspresso deploy \
+            --config ecspresso.config.yaml
+
+      - name: Write deployment summary
+        run: |
+          IMAGE_URI="${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ steps.get-image-tag.outputs.image-tag }}"
+          echo "### Deployed backend application image" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Image: \`${IMAGE_URI}\`" >> "$GITHUB_STEP_SUMMARY"
