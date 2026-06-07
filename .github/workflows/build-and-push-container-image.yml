@@ -11,15 +11,14 @@ jobs:
   build-and-push-container-image:
     runs-on: ubuntu-latest
     steps:
-      - shell: bash
-      - id: Checkout
+      - name: Checkout
         uses: actions/checkout@v6
       - name: Get image tag
         id: get-image-tag
         run: |
           SHORT_COMMIT_ID=$(git rev-parse --short HEAD)
           TIMESTAMP=$(date -u +%Y%m%d%H%M%S)
-          echo "image-tag=${SHORT_COMMIT_ID}-${TIMESTAMP}" >> "$GITHUB_OUTPUT"
+          echo "image-tag=app-${SHORT_COMMIT_ID}-${TIMESTAMP}" >> "$GITHUB_OUTPUT"
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v6.1.0
         with:

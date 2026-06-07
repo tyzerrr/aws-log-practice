@@ -27,7 +27,7 @@ jobs:
           - id: create-db-app-user
             context: server/cmd/batch
             dockerfile: server/cmd/batch/Dockerfile
-            tag-prefix: batch-create-db-app-user
+            tag_prefix: batch-create-db-app-user
             title: aws-log-practice-batch-create-db-app-user
     steps:
       - name: Checkout
@@ -38,7 +38,7 @@ jobs:
         run: |
           SHORT_COMMIT_ID=$(git rev-parse --short HEAD)
           TIMESTAMP=$(date -u +%Y%m%d%H%M%S)
-          IMAGE_TAG="${{ matrix.batch.tag-prefix }}-${SHORT_COMMIT_ID}-${TIMESTAMP}"
+          IMAGE_TAG="${{ matrix.batch.tag_prefix }}-${SHORT_COMMIT_ID}-${TIMESTAMP}"
           echo "image-tag=${IMAGE_TAG}" >> "$GITHUB_OUTPUT"
 
       - name: Configure AWS Credentials
