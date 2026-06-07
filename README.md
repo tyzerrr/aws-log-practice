@@ -68,10 +68,13 @@ ECS Fargate と RDS for PostgreSQL を用いたアプリケーション基盤を
 
 - `create_db_app_user`: Secrets Manager の admin/app credential を読み、admin user で RDS に接続して application 用 DB user を作成または更新します。既存 table / sequence と今後作成される table / sequence に必要な権限を付与します。
 - `check_db_app_user`: application 用 DB user で実際に RDS に接続し、database / schema / table / sequence の権限が付いていることを確認します。
+- `check_db_migration_drift`: migration 適用前の shadow database と remote RDS の schema に drift がないことを確認します。
+- `apply_db_migration`: migration image に同梱された Atlas migration を remote RDS に適用します。
 
 DB の host、port、DB名、subnet、security group、ECS role などの環境依存値は ecspresso が Terraform state から読み込みます。DB password は Docker image や GitHub Actions の build 時には埋め込まず、task 実行時に task role の権限で Secrets Manager から取得します。
 
 batch の ecspresso 定義は `ecspresso/batch/` にあります。
+DB migration 用の ecspresso 定義は `ecspresso/migration/` にあります。
 
 ```bash
 cd ecspresso
@@ -96,6 +99,19 @@ ecspresso --envfile ../server/cmd/batch/.env run \
 ```
 
 task role には admin / app 両方の DB secret に対する `secretsmanager:GetSecretValue` 権限が必要です。
+
+### DB Migration
+
+DB migration は Atlas を同梱した migration image を ECR に push し、ECS one-shot task として実行します。RDS は private subnet にあるため、GitHub Actions runner から RDS へ直接接続しません。
+
+GitHub Actions の `.github/workflows/migrate-db.yml` は次の順序で動きます。
+
+1. `scripts/detect-new-migrations.sh` で `db/migrations/*.sql` の新規追加を検知する。
+2. migration image を build し、`batch-migrate-db-<short-sha>-<yyyymmddHHMMSS>` tag で ECR に push する。
+3. `ecspresso/migration/ecs-check-db-migration-drift-task-def.json` で drift check を実行する。
+4. drift check が成功した場合だけ、`ecspresso/migration/ecs-apply-db-migration-task-def.json` で `atlas migrate apply` を実行する。
+
+GitHub Actions には DB password を渡しません。`DB_ADMIN_CREDENTIAL_ID` は Secrets Manager の secret ID だけを GitHub Secret として渡し、ECS task role が実行時に Secrets Manager から admin credential を読みます。
 
 ## Frontend
 
@@ -229,6 +245,7 @@ batch image の例:
 
 ```text
 aws-log-practice-dev-ecr-repository:batch-create-db-app-user-128f310-20260607114532
+aws-log-practice-dev-ecr-repository:batch-migrate-db-56f3535-20260607133000
 ```
 
 DB credential rotation / sync は、Terraform で RDS master password と admin secret の version を揃えて更新し、その後 `create_db_app_user` batch を実行して application 用 user の password と権限を更新する流れです。application は admin credential を使わず、Secrets Manager の app credential だけで接続します。
