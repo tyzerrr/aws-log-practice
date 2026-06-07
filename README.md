@@ -163,7 +163,7 @@ make db-down
 ### 2. Backend
 
 backend は ConnectRPC の HTTP server として起動します。
-`DATABASE_URL` と `SERVER_PORT` が必要です。
+local development では `DATABASE_URL` と `SERVER_PORT` を指定します。
 
 ```bash
 DATABASE_URL="postgres://aws-log-practice:aws-log-practice@localhost:5432/aws-log-practice?sslmode=disable" \
@@ -172,6 +172,8 @@ go run ./server/cmd/server
 ```
 
 起動後、backend は `http://localhost:8080` で待ち受けます。
+
+ECS では password 入り `DATABASE_URL` を渡さず、`DB_HOST` / `DB_PORT` / `DB_NAME` / `DB_USER` / `DB_PASSWORD` / `DB_SSLMODE` から backend が DSN を組み立てます。`DB_USER` と `DB_PASSWORD` は Secrets Manager の application DB secret から ECS task definition の `secrets` で注入します。
 
 ### 3. Frontend
 

@@ -9,6 +9,7 @@
 - Batch image は GitHub Actions から ECR に push できる。tag は `batch-<batch-name>-<short-sha>-<yyyymmddHHMMSS>` 形式。
 - Atlas migration 用の ECS one-shot task definition と GitHub Actions workflow を追加済み。GitHub Actions から migration image を ECR に push し、ecspresso 経由で drift check と migration apply を実行できる。
 - RDS primary database には initial migration `20260527204929_initial_schema.sql` を適用済み。`MIGRATION_BASE_VERSION=20260527204929` の drift check も成功している。
+- Backend application は `DATABASE_URL` があればそれを優先し、無ければ `DB_HOST` / `DB_PORT` / `DB_NAME` / `DB_USER` / `DB_PASSWORD` / `DB_SSLMODE` から PostgreSQL DSN を組み立てる。ecspresso の application task definition も `DB_SSLMODE=require` を渡す。
 
 ## Done: RDS Migration CI / App User 権限確認
 
@@ -31,37 +32,23 @@ RDS migration を ECS one-shot task として実行する流れは確認済み�
 - 追加 migration の通常運用では、CI が追加 migration file から base version を自動算出する。
 - migration で新しい table / sequence が増えた場合は、`create_db_app_user` を再実行して既存 object への GRANT を反映し、その後 `check_db_app_user` で確認する。
 
-## P1: Backend Application の RDS 接続方式を ECS 環境変数に合わせる
+## Done: Backend Application の RDS 接続方式を ECS 環境変数に合わせる
 
-ecspresso の application task definition は、RDS 接続情報を分解して渡している。
+Backend application の RDS 接続方式は ECS task definition と噛み合うように修正済み。
 
-- `DB_HOST`: Terraform state の primary RDS endpoint
-- `DB_PORT`: Terraform state の RDS port
-- `DB_NAME`: Terraform state の DB name
-- `DB_USER`: Secrets Manager の app secret から注入
-- `DB_PASSWORD`: Secrets Manager の app secret から注入
+完了したこと:
 
-しかし backend application code は現状 `DATABASE_URL` だけを読んでいる。
-
-```go
-db.NewDBPool(ctx, logger, os.Getenv("DATABASE_URL"))
-```
-
-つまり、ECS task definition が渡している env と application が期待している env が噛み合っていない。
-
-やること:
-
-- backend 起動時の DB 接続文字列生成を整理する。
-- `DATABASE_URL` が設定されていればそれを優先する。これは local development を壊さないため。
+- `DATABASE_URL` が設定されていればそれを優先する。local development では従来どおり `DATABASE_URL` で起動できる。
 - `DATABASE_URL` が空なら、`DB_HOST` / `DB_PORT` / `DB_NAME` / `DB_USER` / `DB_PASSWORD` / `DB_SSLMODE` から PostgreSQL DSN を組み立てる。
-- password は URL encode する。
-- ECS では app credential だけを使う。admin credential は application container に渡さない。
+- password は `net/url` の `url.UserPassword` 経由で URL encode する。
+- `DB_PORT` は未指定なら `5432`、`DB_SSLMODE` は未指定なら `require` を使う。
+- ecspresso の application task definition に `DB_SSLMODE=require` を追加した。
+- unit test で `DATABASE_URL` 優先、`DB_*` からの DSN 組み立て、default port / sslmode、必須 env 不足時の error を確認している。
 
-完了条件:
+運用上の注意:
 
-- local では従来どおり `DATABASE_URL` で起動できる。
-- ECS では `DB_*` env と Secrets Manager 注入値だけで RDS に接続できる。
-- application container に password 入り `DATABASE_URL` を直接置かない。
+- ECS では application container に password 入り `DATABASE_URL` を直接置かない。
+- application runtime には app credential だけを渡す。admin credential は migration / batch task だけで使う。
 
 ## P2: Backend Application Image / Deploy を整備する
 
