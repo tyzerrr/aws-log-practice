@@ -5,9 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -23,6 +26,11 @@ const (
 	ExitErr
 )
 
+const (
+	defaultDBPort    = "5432"
+	defaultDBSSLMode = "require"
+)
+
 func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	if err := run(logger); err != nil {
@@ -36,7 +44,12 @@ func run(logger *slog.Logger) error {
 	defer stop()
 
 	// db pool
-	dbPool, err := db.NewDBPool(ctx, logger, os.Getenv("DATABASE_URL"))
+	databaseURL, err := databaseURLFromEnv()
+	if err != nil {
+		logger.Error("failed to load database config", slog.String("error", err.Error()))
+		return err
+	}
+	dbPool, err := db.NewDBPool(ctx, logger, databaseURL)
 	if err != nil {
 		logger.Error("failed to start db pool", slog.String("error", err.Error()))
 		return err
@@ -100,4 +113,50 @@ func run(logger *slog.Logger) error {
 	}
 	logger.Info("server success to shutdown!")
 	return nil
+}
+
+func databaseURLFromEnv() (string, error) {
+	if databaseURL := strings.TrimSpace(os.Getenv("DATABASE_URL")); databaseURL != "" {
+		return databaseURL, nil
+	}
+
+	host := strings.TrimSpace(os.Getenv("DB_HOST"))
+	port := envDefault("DB_PORT", defaultDBPort)
+	name := strings.TrimSpace(os.Getenv("DB_NAME"))
+	user := strings.TrimSpace(os.Getenv("DB_USER"))
+	password := strings.TrimSpace(os.Getenv("DB_PASSWORD"))
+	sslMode := envDefault("DB_SSLMODE", defaultDBSSLMode)
+
+	switch {
+	case host == "":
+		return "", fmt.Errorf("DB_HOST is required when DATABASE_URL is empty")
+	case name == "":
+		return "", fmt.Errorf("DB_NAME is required when DATABASE_URL is empty")
+	case user == "":
+		return "", fmt.Errorf("DB_USER is required when DATABASE_URL is empty")
+	case password == "":
+		return "", fmt.Errorf("DB_PASSWORD is required when DATABASE_URL is empty")
+	case sslMode == "":
+		return "", fmt.Errorf("DB_SSLMODE is required when DATABASE_URL is empty")
+	}
+
+	u := url.URL{
+		Scheme: "postgres",
+		User:   url.UserPassword(user, password),
+		Host:   net.JoinHostPort(host, port),
+		Path:   "/" + name,
+	}
+	values := url.Values{}
+	values.Set("sslmode", sslMode)
+	u.RawQuery = values.Encode()
+
+	return u.String(), nil
+}
+
+func envDefault(key string, defaultValue string) string {
+	value := strings.TrimSpace(os.Getenv(key))
+	if value == "" {
+		return defaultValue
+	}
+	return value
 }
