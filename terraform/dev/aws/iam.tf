@@ -101,7 +101,8 @@ resource "aws_iam_role_policy" "github_actions_ecspresso_run" {
           "ecs:ListTasks",
           "ecs:RegisterTaskDefinition",
           "ecs:RunTask",
-          "ecs:TagResource"
+          "ecs:TagResource",
+          "ecs:UpdateService"
         ]
         Resource = "*"
       },
