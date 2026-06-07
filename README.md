@@ -203,6 +203,7 @@ corepack pnpm run proto:gen
 ## Infrastructure
 
 `terraform/dev/aws/` に dev 環境の AWS リソースを Terraform で定義しています。
+Terraform の inputs / outputs は [terraform/dev/aws/README.md](terraform/dev/aws/README.md) に terraform-docs で生成しています。
 
 現在の主な構成:
 
@@ -225,7 +226,6 @@ corepack pnpm run proto:gen
 
 - Kinesis Data Firehose
 - ログ保存先
-- terraform-docs によるドキュメント生成
 
 採用技術:
 
@@ -241,6 +241,12 @@ corepack pnpm run proto:gen
 - GitHub Actions OIDC
 - ecspresso
 - terraform-docs
+
+Terraform docs を更新する場合:
+
+```bash
+make terraform-docs
+```
 
 ## Deploy And Operations
 

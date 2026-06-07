@@ -11,6 +11,7 @@
 - RDS primary database には initial migration `20260527204929_initial_schema.sql` を適用済み。`MIGRATION_BASE_VERSION=20260527204929` の drift check も成功している。
 - Backend application は `DATABASE_URL` があればそれを優先し、無ければ `DB_HOST` / `DB_PORT` / `DB_NAME` / `DB_USER` / `DB_PASSWORD` / `DB_SSLMODE` から PostgreSQL DSN を組み立てる。ecspresso の application task definition も `DB_SSLMODE=require` を渡す。
 - Backend application 用 Dockerfile と GitHub Actions workflow を追加済み。workflow は application image を buildx で build/push し、ecspresso deploy で ECS service を更新する。
+- `terraform/dev/aws/README.md` は terraform-docs で生成している。`make terraform-docs` で更新でき、GitHub Actions で差分チェックする。
 
 ## P3: Frontend 開発
 
@@ -46,20 +47,16 @@ Frontend は backend / DB / deploy が安定してから API 結合すると進�
 - CloudWatch Logs から保存先へ配送できる。
 - Production Ready なログ運用に必要な retention / encryption / permission が定義されている。
 
-## P6: Terraform / ecspresso / Documentation 整理
+## P6: Terraform / ecspresso 整理
 
 機能実装が落ち着いた後に保守性を上げる。
 
 やること:
 
-- terraform-docs を導入する。
-- Terraform module / environment の README を生成する。
-- 必要であれば CI で terraform-docs の差分チェックを行う。
 - ecspresso の application / batch task definition の重複を整理する。
 - task role を application 用と batch 用で分けるか検討する。
 
 完了条件:
 
-- Terraform の inputs / outputs が docs で追える。
 - ecspresso 定義の重複が許容範囲に収まっている。
 - IAM role の責務が明確になっている。
