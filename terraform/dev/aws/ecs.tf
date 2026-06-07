@@ -136,3 +136,24 @@ resource "aws_iam_role" "task" {
     Name = "${local.project}-${local.env}-task-role"
   }
 }
+
+resource "aws_iam_role_policy" "task_read_db_secrets" {
+  name = "${local.project}-${local.env}-task-read-db-secrets"
+  role = aws_iam_role.task.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "secretsmanager:GetSecretValue"
+        ]
+        Resource = [
+          aws_secretsmanager_secret.db_admin.arn,
+          aws_secretsmanager_secret.db_app.arn
+        ]
+      }
+    ]
+  })
+}
