@@ -29,27 +29,6 @@ Frontend は backend / DB / deploy が安定してから API 結合すると進�
 - AWS backend に向けた接続設定が整理されている。
 - 主要 domain の基本操作を画面から確認できる。
 
-## P4: DB Credential Rotation / Batch 運用を手順化する
-
-現状は手動で以下の流れを実行できる。
-
-1. Terraform で RDS master password と admin secret の version を揃えて更新する。
-2. `create_db_app_user` batch を ECS one-shot task として実行する。
-3. `check_db_app_user` batch を ECS one-shot task として実行する。
-
-やること:
-
-- rotation 手順を runbook 化する。
-- 必要なら workflow_dispatch で batch image build と ecspresso run を実行できるようにする。
-- admin credential は application runtime から分離し、batch/task role だけが読める状態を保つ。
-- app credential の rotation 時に application deploy / restart が必要か整理する。
-
-完了条件:
-
-- credential 更新手順が README または docs に明文化されている。
-- operator が手順どおりに `create` -> `check` を実行できる。
-- application が admin credential を一切使わない。
-
 ## P5: Logging / Observability
 
 当初目的である CloudWatch Logs 起点のログ配送は、ECS/RDS/application deploy が安定してから進める。
