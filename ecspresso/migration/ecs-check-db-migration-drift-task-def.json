@@ -92,7 +92,7 @@
           "pg_isready -U shadow -d postgres"
         ],
         "interval": 5,
-        "retries": 12,
+        "retries": 10,
         "startPeriod": 15,
         "timeout": 5
       },
