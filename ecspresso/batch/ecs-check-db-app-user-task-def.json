@@ -1,0 +1,86 @@
+{
+  "containerDefinitions": [
+    {
+      "command": [
+        "check_db_app_user"
+      ],
+      "cpu": 256,
+      "entryPoint": [
+        "/batch"
+      ],
+      "environment": [
+        {
+          "name": "AWS_REGION",
+          "value": "{{ env `AWS_REGION` `ap-northeast-1` }}"
+        },
+        {
+          "name": "DB_ADMIN_CREDENTIAL_ID",
+          "value": "{{ must_env `DB_ADMIN_CREDENTIAL_ID` }}"
+        },
+        {
+          "name": "DB_APP_CREDENTIAL_ID",
+          "value": "{{ must_env `DB_APP_CREDENTIAL_ID` }}"
+        },
+        {
+          "name": "DB_HOST",
+          "value": "{{ tfstate `output.db_primary_host` }}"
+        },
+        {
+          "name": "DB_PORT",
+          "value": "{{ tfstate `output.db_port` }}"
+        },
+        {
+          "name": "DB_NAME",
+          "value": "{{ tfstate `output.primary_db_name` }}"
+        },
+        {
+          "name": "DB_SCHEMA",
+          "value": "public"
+        },
+        {
+          "name": "DB_SSLMODE",
+          "value": "require"
+        }
+      ],
+      "essential": true,
+      "image": "{{ must_env `IMAGE_URI` }}",
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "{{ tfstate `aws_cloudwatch_log_group.ecs.name` }}",
+          "awslogs-region": "ap-northeast-1",
+          "awslogs-stream-prefix": "batch/check-db-app-user"
+        }
+      },
+      "memory": 512,
+      "name": "check-db-app-user"
+    }
+  ],
+  "cpu": "256",
+  "executionRoleArn": "{{ tfstate `aws_iam_role.task_execution.arn` }}",
+  "family": "aws-log-practice-dev-batch-check-db-app-user",
+  "memory": "512",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": [
+    "FARGATE"
+  ],
+  "tags": [
+    {
+      "key": "Project",
+      "value": "aws-log-practice"
+    },
+    {
+      "key": "ManagedBy",
+      "value": "ecspresso"
+    },
+    {
+      "key": "Env",
+      "value": "dev"
+    },
+    {
+      "key": "Name",
+      "value": "aws-log-practice-dev-batch-check-db-app-user"
+    }
+  ],
+  "taskRoleArn": "{{ tfstate `aws_iam_role.task.arn` }}"
+}
