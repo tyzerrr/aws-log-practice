@@ -111,7 +111,7 @@ GitHub Actions の `.github/workflows/migrate-db.yml` は次の順序で動き�
 3. `ecspresso/migration/ecs-check-db-migration-drift-task-def.json` で drift check を実行する。
 4. drift check が成功した場合だけ、`ecspresso/migration/ecs-apply-db-migration-task-def.json` で `atlas migrate apply` を実行する。
 
-GitHub Actions には DB password を渡しません。`DB_ADMIN_CREDENTIAL_ID` は Secrets Manager の secret ID だけを GitHub Secret として渡し、ECS task role が実行時に Secrets Manager から admin credential を読みます。
+GitHub Actions には DB password を渡しません。`DB_ADMIN_CREDENTIAL_ID` は Secrets Manager の secret name である `aws-log-practice/dev/db/admin` を workflow 内に固定値として置きます。ECS task role が実行時に Secrets Manager から admin credential を読みます。
 
 ## Frontend
 

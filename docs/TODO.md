@@ -20,7 +20,7 @@ migration one-shot task と CI workflow の実装は入っているが、AWS 側
 やること:
 
 - Terraform apply で GitHub OIDC role に ecspresso run 用の権限を反映する。
-- GitHub repository secret に `DB_ADMIN_CREDENTIAL_ID` を設定する。これは DB password ではなく Secrets Manager の secret ID。
+- `DB_ADMIN_CREDENTIAL_ID` は DB password ではなく Secrets Manager の secret name なので、CI workflow 内の固定値 `aws-log-practice/dev/db/admin` を使う。
 - migration workflow を実行し、drift check と `atlas migrate apply` が成功することを確認する。
 - migration 実行後に `create_db_app_user` を再実行し、既存 table / sequence への GRANT を反映する。
 - その後 `check_db_app_user` を再実行し、table 権限の check が増えてすべて成功することを確認する。
