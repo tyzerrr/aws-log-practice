@@ -61,26 +61,26 @@ resource "aws_security_group_rule" "ecs_task_sg_egress_rule" {
 
 resource "aws_security_group" "rds_security_group" {
   vpc_id = aws_vpc.vpc.id
-  name = "${local.project}-${local.env}-rds-sg"
+  name   = "${local.project}-${local.env}-rds-sg"
   tags = {
     Name = "${local.project}-${local.env}-rds-sg"
   }
 }
 
 resource "aws_security_group_rule" "rds_security_sg_ingress_rule" {
-  security_group_id = aws_security_group.rds_security_group.id
-  protocol          = "TCP"
-  type              = "ingress"
-  from_port         = local.db_port
-  to_port           = local.db_port
+  security_group_id        = aws_security_group.rds_security_group.id
+  protocol                 = "TCP"
+  type                     = "ingress"
+  from_port                = local.db_port
+  to_port                  = local.db_port
   source_security_group_id = aws_security_group.ecs_task_sg.id
 }
 
 resource "aws_security_group_rule" "rds_security_sg_egress_rule" {
   security_group_id = aws_security_group.rds_security_group.id
-  type = "egress"
-  protocol = "-1"
-  from_port = 0
-  to_port = 0
-  cidr_blocks = ["0.0.0.0/0"]
+  type              = "egress"
+  protocol          = "-1"
+  from_port         = 0
+  to_port           = 0
+  cidr_blocks       = ["0.0.0.0/0"]
 }

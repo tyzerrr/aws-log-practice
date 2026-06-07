@@ -22,7 +22,7 @@ resource "aws_secretsmanager_secret_version" "db_admin" {
     password = ephemeral.aws_secretsmanager_random_password.db_admin.random_password
   })
 
-  secret_string_wo_version = 1
+  secret_string_wo_version = local.db_admin_password_version
 }
 
 resource "aws_secretsmanager_secret_version" "db_app" {
@@ -33,8 +33,5 @@ resource "aws_secretsmanager_secret_version" "db_app" {
     password = ephemeral.aws_secretsmanager_random_password.db_app.random_password
   })
 
-  secret_string_wo_version = 1
+  secret_string_wo_version = local.db_app_password_version
 }
-
-
-
