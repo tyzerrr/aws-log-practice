@@ -1,0 +1,169 @@
+name: migrate-db.yml
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/migrate-db.yml"
+      - "atlas.hcl"
+      - "db/migrations/**"
+      - "db/schema.sql"
+      - "ecspresso/ecspresso.config.yaml"
+      - "ecspresso/ecs-service-def.json"
+      - "ecspresso/migration/**"
+      - "scripts/detect-new-migrations.sh"
+      - "server/cmd/batch/**"
+  workflow_dispatch:
+    inputs:
+      force_run:
+        description: "Run drift check and migration apply even when no new migration is detected."
+        required: false
+        default: false
+        type: boolean
+      migration_base_version:
+        description: "Base migration version for forced drift check. Leave empty to compare against the latest committed migration before new additions."
+        required: false
+        default: ""
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: ap-northeast-1
+  ECR_REPOSITORY: aws-log-practice-dev-ecr-repository
+
+jobs:
+  detect_new_migrations:
+    runs-on: ubuntu-latest
+    outputs:
+      has_added_migration: ${{ steps.detect.outputs.has_added_migration }}
+      base_version: ${{ steps.detect.outputs.base_version }}
+      added_count: ${{ steps.detect.outputs.added_count }}
+      added_migrations: ${{ steps.detect.outputs.added_migrations }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Detect new migrations
+        id: detect
+        run: |
+          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
+            BASE_REF="${GITHUB_SHA}"
+          else
+            BASE_REF="${{ github.event.before }}"
+          fi
+
+          scripts/detect-new-migrations.sh "${BASE_REF}" "${GITHUB_SHA}"
+
+      - name: Write migration detection summary
+        run: |
+          echo "### DB migration detection" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Has added migration: \`${{ steps.detect.outputs.has_added_migration }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Added count: \`${{ steps.detect.outputs.added_count }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Base version: \`${{ steps.detect.outputs.base_version }}\`" >> "$GITHUB_STEP_SUMMARY"
+          if [[ "${{ steps.detect.outputs.has_added_migration }}" == "true" ]]; then
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "Added migrations:" >> "$GITHUB_STEP_SUMMARY"
+            echo '```text' >> "$GITHUB_STEP_SUMMARY"
+            echo "${{ steps.detect.outputs.added_migrations }}" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+  migrate-db:
+    runs-on: ubuntu-latest
+    needs:
+      - detect_new_migrations
+    if: ${{ needs.detect_new_migrations.outputs.has_added_migration == 'true' || inputs.force_run == true }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Resolve migration base version
+        run: |
+          MIGRATION_BASE_VERSION="${{ needs.detect_new_migrations.outputs.base_version }}"
+          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" && -n "${{ inputs.migration_base_version }}" ]]; then
+            MIGRATION_BASE_VERSION="${{ inputs.migration_base_version }}"
+          fi
+          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" && "${{ inputs.force_run }}" == "true" && -z "${MIGRATION_BASE_VERSION}" ]]; then
+            MIGRATION_BASE_VERSION="$(git ls-files 'db/migrations/*.sql' | sed -E 's#^.*/([0-9]+)_.+$#\1#' | sort | tail -n 1)"
+          fi
+          echo "MIGRATION_BASE_VERSION=${MIGRATION_BASE_VERSION}" >> "$GITHUB_ENV"
+
+      - name: Get image tag
+        id: get-image-tag
+        run: |
+          SHORT_COMMIT_ID=$(git rev-parse --short HEAD)
+          TIMESTAMP=$(date -u +%Y%m%d%H%M%S)
+          echo "image-tag=batch-migrate-db-${SHORT_COMMIT_ID}-${TIMESTAMP}" >> "$GITHUB_OUTPUT"
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v6.1.0
+        with:
+          role-to-assume: ${{ secrets.IAM_ARN_TO_PUSH_CONTAINER_IMAGE }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+        with:
+          mask-password: "true"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push migration image to Amazon ECR
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: server/cmd/batch/Dockerfile.migration
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ steps.get-image-tag.outputs.image-tag }}
+          labels: |
+            org.opencontainers.image.title=aws-log-practice-batch-migrate-db
+            org.opencontainers.image.description=ECS one-shot batch image for Atlas DB migration
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            com.aws-log-practice.image.kind=batch
+            com.aws-log-practice.batch.name=migrate-db
+
+      - name: Install ecspresso
+        uses: kayac/ecspresso@v2
+        with:
+          version: v2.8.2
+
+      - name: Check DB migration drift
+        working-directory: ecspresso
+        env:
+          IMAGE_URI: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ steps.get-image-tag.outputs.image-tag }}
+          DB_ADMIN_CREDENTIAL_ID: ${{ secrets.DB_ADMIN_CREDENTIAL_ID }}
+        run: |
+          ecspresso run \
+            --config ecspresso.config.yaml \
+            --task-def migration/ecs-check-db-migration-drift-task-def.json \
+            --wait
+
+      - name: Apply DB migration
+        working-directory: ecspresso
+        env:
+          IMAGE_URI: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ steps.get-image-tag.outputs.image-tag }}
+          DB_ADMIN_CREDENTIAL_ID: ${{ secrets.DB_ADMIN_CREDENTIAL_ID }}
+        run: |
+          ecspresso run \
+            --config ecspresso.config.yaml \
+            --task-def migration/ecs-apply-db-migration-task-def.json \
+            --wait
+
+      - name: Write migration summary
+        run: |
+          IMAGE_URI="${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ steps.get-image-tag.outputs.image-tag }}"
+          echo "### Applied DB migration" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Image: \`${IMAGE_URI}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Base version: \`${MIGRATION_BASE_VERSION}\`" >> "$GITHUB_STEP_SUMMARY"
