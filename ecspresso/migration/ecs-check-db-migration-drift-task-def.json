@@ -1,0 +1,139 @@
+{
+  "containerDefinitions": [
+    {
+      "command": [
+        "check_db_migration_drift"
+      ],
+      "cpu": 256,
+      "dependsOn": [
+        {
+          "condition": "HEALTHY",
+          "containerName": "shadow-postgres"
+        }
+      ],
+      "entryPoint": [
+        "/batch"
+      ],
+      "environment": [
+        {
+          "name": "AWS_REGION",
+          "value": "{{ env `AWS_REGION` `ap-northeast-1` }}"
+        },
+        {
+          "name": "DB_ADMIN_CREDENTIAL_ID",
+          "value": "{{ must_env `DB_ADMIN_CREDENTIAL_ID` }}"
+        },
+        {
+          "name": "DB_HOST",
+          "value": "{{ tfstate `output.db_primary_host` }}"
+        },
+        {
+          "name": "DB_PORT",
+          "value": "{{ tfstate `output.db_port` }}"
+        },
+        {
+          "name": "DB_NAME",
+          "value": "{{ tfstate `output.primary_db_name` }}"
+        },
+        {
+          "name": "DB_SCHEMA",
+          "value": "public"
+        },
+        {
+          "name": "DB_SSLMODE",
+          "value": "require"
+        },
+        {
+          "name": "MIGRATION_BASE_VERSION",
+          "value": "{{ env `MIGRATION_BASE_VERSION` `` }}"
+        },
+        {
+          "name": "SHADOW_DATABASE_URL",
+          "value": "postgres://shadow:shadow@127.0.0.1:5432/shadow?sslmode=disable"
+        },
+        {
+          "name": "DEV_DATABASE_URL",
+          "value": "postgres://shadow:shadow@127.0.0.1:5432/shadow_dev?sslmode=disable"
+        }
+      ],
+      "essential": true,
+      "image": "{{ must_env `IMAGE_URI` }}",
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "{{ tfstate `aws_cloudwatch_log_group.ecs.name` }}",
+          "awslogs-region": "ap-northeast-1",
+          "awslogs-stream-prefix": "migration/check-db-migration-drift"
+        }
+      },
+      "memory": 512,
+      "name": "check-db-migration-drift"
+    },
+    {
+      "cpu": 256,
+      "environment": [
+        {
+          "name": "POSTGRES_USER",
+          "value": "shadow"
+        },
+        {
+          "name": "POSTGRES_PASSWORD",
+          "value": "shadow"
+        },
+        {
+          "name": "POSTGRES_DB",
+          "value": "postgres"
+        }
+      ],
+      "essential": false,
+      "healthCheck": {
+        "command": [
+          "CMD-SHELL",
+          "pg_isready -U shadow -d postgres"
+        ],
+        "interval": 5,
+        "retries": 12,
+        "startPeriod": 15,
+        "timeout": 5
+      },
+      "image": "postgres:17",
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "{{ tfstate `aws_cloudwatch_log_group.ecs.name` }}",
+          "awslogs-region": "ap-northeast-1",
+          "awslogs-stream-prefix": "migration/shadow-postgres"
+        }
+      },
+      "memory": 512,
+      "name": "shadow-postgres"
+    }
+  ],
+  "cpu": "512",
+  "executionRoleArn": "{{ tfstate `aws_iam_role.task_execution.arn` }}",
+  "family": "aws-log-practice-dev-migration-check-db-migration-drift",
+  "memory": "1024",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": [
+    "FARGATE"
+  ],
+  "tags": [
+    {
+      "key": "Project",
+      "value": "aws-log-practice"
+    },
+    {
+      "key": "ManagedBy",
+      "value": "ecspresso"
+    },
+    {
+      "key": "Env",
+      "value": "dev"
+    },
+    {
+      "key": "Name",
+      "value": "aws-log-practice-dev-migration-check-db-migration-drift"
+    }
+  ],
+  "taskRoleArn": "{{ tfstate `aws_iam_role.task.arn` }}"
+}
