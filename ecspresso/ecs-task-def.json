@@ -39,6 +39,10 @@
         {
           "name": "DB_NAME",
           "value": "{{ tfstate `output.primary_db_name` }}"
+        },
+        {
+          "name": "DB_SSLMODE",
+          "value": "require"
         }
       ],
       "secrets": [
