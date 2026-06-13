@@ -1,7 +1,58 @@
-interface ProductTableProps {
-  productsCount: number;
+import type { Product } from "@/app/page";
+import { hashKey } from "@/lib/key";
+import { chunk } from "@/lib/lib";
+import ProductCard from "./ProductCard";
+
+interface ProductTableLayout {
+  row: number;
+  column: number;
+  totalProductCount: number;
 }
 
-export default function ProductTable({ productsCount }: ProductTableProps) {
-  return <div>{productsCount}</div>;
+interface ProductTableProps {
+  tableLayout: ProductTableLayout;
+  products: Product[];
+}
+
+interface ProductTableRowProps {
+  products: Product[];
+}
+
+function ProductTableRow({ products }: ProductTableRowProps) {
+  return (
+    <div className="flex gap-6 items-center w-full justify-between">
+      {products.map((product, index) => {
+        return (
+          <ProductCard
+            key={hashKey("product", product, index)}
+            imageURL={product.imageURL}
+            category={product.category}
+            title={product.title}
+            price={product.price}
+            tags={product.tags}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+export default function ProductTable({
+  tableLayout,
+  products,
+}: ProductTableProps) {
+  return (
+    <div>
+      {chunk(products, tableLayout.column).map((productsChunk, index) => {
+        return (
+          <div
+            key={hashKey("product-row", productsChunk, index)}
+            className="flex flex-col justify-between w-full my-6"
+          >
+            <ProductTableRow products={productsChunk} />
+          </div>
+        );
+      })}
+    </div>
+  );
 }

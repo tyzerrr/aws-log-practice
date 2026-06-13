@@ -1,76 +1,102 @@
-"use client";
+import ProductTable from "@/components/ProductTable";
+import RankingSelector from "@/components/RankingSelector";
 
-import { useState } from "react";
-
-type RankingOrder = "newer" | "lowerPrice" | "higherPrice";
-
-interface RankingSelector {
-  index: number;
-  context: RankingSelectorContext;
+export interface Product {
+  imageURL: URL;
+  category: string;
+  title: string;
+  price: number;
+  tags: string[];
 }
 
-interface RankingSelectorContext {
-  order: RankingOrder;
-}
-
-function rankingSelector(focused: boolean): string {
-  let css = `border rounded-full px-3 py-1`;
-  if (focused) {
-    css = `rounded-full px-3 py-1 text-white bg-black border-none`;
-  }
-  return css;
-}
-
-function getRankingSelectorDisplySet(): Array<{
-  display: string;
-  order: RankingOrder;
-}> {
-  return [
-    { display: "新しい順", order: "newer" },
-    { display: "価格が安い順", order: "lowerPrice" },
-    { display: "価格が高い順", order: "higherPrice" },
-  ];
-}
+const products: Product[] = [
+  {
+    imageURL: new URL(
+      "https://cdn.dummyjson.com/product-images/beauty/essence-mascara-lash-princess/thumbnail.webp",
+    ),
+    category: "Beauty",
+    title: "Essence Mascara Lash Princess",
+    price: 1490,
+    tags: ["beauty", "mascara"],
+  },
+  {
+    imageURL: new URL(
+      "https://cdn.dummyjson.com/product-images/fragrances/calvin-klein-ck-one/thumbnail.webp",
+    ),
+    category: "Fragrances",
+    title: "Calvin Klein CK One",
+    price: 7400,
+    tags: ["fragrance", "unisex"],
+  },
+  {
+    imageURL: new URL(
+      "https://cdn.dummyjson.com/product-images/furniture/annibale-colombo-bed/thumbnail.webp",
+    ),
+    category: "Furniture",
+    title: "Annibale Colombo Bed",
+    price: 278000,
+    tags: ["furniture", "bed"],
+  },
+  {
+    imageURL: new URL(
+      "https://cdn.dummyjson.com/product-images/groceries/apple/thumbnail.webp",
+    ),
+    category: "Groceries",
+    title: "Fresh Apple",
+    price: 180,
+    tags: ["food", "fruit"],
+  },
+  {
+    imageURL: new URL(
+      "https://cdn.dummyjson.com/product-images/home-decoration/decoration-swing/thumbnail.webp",
+    ),
+    category: "Home Decoration",
+    title: "Decoration Swing",
+    price: 8990,
+    tags: ["interior", "swing"],
+  },
+  {
+    imageURL: new URL(
+      "https://cdn.dummyjson.com/product-images/kitchen-accessories/black-whisk/thumbnail.webp",
+    ),
+    category: "Kitchen Accessories",
+    title: "Black Whisk",
+    price: 1290,
+    tags: ["kitchen", "tool"],
+  },
+  {
+    imageURL: new URL(
+      "https://cdn.dummyjson.com/product-images/laptops/apple-macbook-pro-14-inch-space-grey/thumbnail.webp",
+    ),
+    category: "Laptops",
+    title: "Apple MacBook Pro 14 Inch",
+    price: 298000,
+    tags: ["laptop", "apple"],
+  },
+  {
+    imageURL: new URL(
+      "https://cdn.dummyjson.com/product-images/mens-shirts/blue-&-black-check-shirt/thumbnail.webp",
+    ),
+    category: "Mens Shirts",
+    title: "Blue & Black Check Shirt",
+    price: 3490,
+    tags: ["fashion", "shirt"],
+  },
+];
 
 export default function Home() {
-  const [focusedRankingSelector, setFocusedRankingSelector] =
-    useState<RankingSelector>({
-      index: 0,
-      context: {
-        order: "newer",
-      },
-    });
-
   return (
-    <div className="flex justify-between items-center mt-6">
-      <div className="flex flex-col gap-1">
-        <div className="text-primary-line-strong font-bold text-sm">
-          ALL PRODUCTS
-        </div>
-        <div className="font-bold text-xl font-serif">商品一覧</div>
-      </div>
-      <div className="flex ites-center gap-6">
-        {getRankingSelectorDisplySet().map((value, index) => {
-          return (
-            <button
-              key={`ranking-selector-${index}`}
-              onFocus={() =>
-                setFocusedRankingSelector({
-                  index: index,
-                  context: {
-                    order: value.order,
-                  },
-                })
-              }
-              className={rankingSelector(
-                focusedRankingSelector.index === index,
-              )}
-            >
-              {value.display}
-            </button>
-          );
-        })}
-      </div>
+    <div className="w-full flex flex-col justify-between px-12">
+      <RankingSelector />
+      <ProductTable
+        // TODO: Need to calculate dynamically
+        tableLayout={{
+          totalProductCount: products.length,
+          column: 4,
+          row: Math.ceil(products.length / 4),
+        }}
+        products={products}
+      />
     </div>
   );
 }
