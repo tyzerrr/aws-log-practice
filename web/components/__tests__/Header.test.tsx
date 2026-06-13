@@ -1,8 +1,6 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import Header from "../Header";
-import Likes from "../Likes";
-import Search from "../Search";
 
 describe("Header", () => {
   it("renders the logo link to home", () => {
