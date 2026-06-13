@@ -13,19 +13,26 @@
 - Backend application 用 Dockerfile と GitHub Actions workflow を追加済み。workflow は application image を buildx で build/push し、ecspresso deploy で ECS service を更新する。
 - `terraform/dev/aws/README.md` は terraform-docs で生成している。`make terraform-docs` で更新でき、GitHub Actions で差分チェックする。
 
-## P3: Frontend 開発
+## P3: Frontend 開発 / テスト整備
 
-Frontend は backend / DB / deploy が安定してから API 結合すると進めやすい。ただし、画面設計や mock API 前提の UI 開発は P1/P2 と並行して進められる。
+Server side と接続しない範囲の frontend mock UI は概ね実装済み。現在は Next.js App Router の Server Component / Client Component 境界を整理し、商品一覧、商品カード、ランキング selector、mock product data、外部商品画像表示まで確認できている。
+
+API 結合前に frontend test の基盤を整備する。調査内容は `docs/frontend.test.investigate.md` にまとめた。
 
 やること:
 
-- 商品、在庫、注文、取引など現在の backend domain に対応する画面を整理する。
+- Vitest + React Testing Library の設定を追加する。
+- `chunk`, `hashKey`, `rankingHandlers` の Unit test を追加する。
+- `RankingSelector` と `ProductTable` の Component test を追加する。
+- Next.js page としての主要導線は Playwright E2E 導入を検討する。
 - ConnectRPC client 経由で backend API を呼ぶ。
 - local backend と AWS backend の接続先切り替えを整理する。
-- 最低限の一覧、作成、詳細、状態確認の導線を作る。
+- 商品、在庫、注文、取引など現在の backend domain に対応する画面を backend API と接続する。
 
 完了条件:
 
+- frontend の pure logic と主要 Client Component にテストがある。
+- `next build` と frontend test を CI で実行できる。
 - local で frontend から backend API を呼べる。
 - AWS backend に向けた接続設定が整理されている。
 - 主要 domain の基本操作を画面から確認できる。
