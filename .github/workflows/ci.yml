@@ -35,3 +35,63 @@ jobs:
         run: pnpm run lint
       - name: Run test
         run: pnpm run test
+  server:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Setup go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: "go.mod"
+          cache-dependency-path: "go.sum"
+      - name: Install dependencies
+        run: go mod download
+      - name: Build server
+        run: go build ./...
+      - name: Check server format
+        run: |
+          set -euo pipefail
+          go list -f '{{.Dir}}' ./... > /tmp/server-go-package-dirs
+          unformatted="$(xargs gofmt -l < /tmp/server-go-package-dirs)"
+          if [ -n "$unformatted" ]; then
+            echo "$unformatted"
+            exit 1
+          fi
+      - name: Vet server
+        run: go vet ./...
+      - name: Test server
+        run: go test ./...
+  batch:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server/cmd/batch
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Setup go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: "server/cmd/batch/go.mod"
+          cache-dependency-path: "server/cmd/batch/go.sum"
+      - name: Install dependencies
+        run: go mod download
+      - name: Build batch
+        run: go build -o /tmp/aws-log-practice-batch .
+      - name: Check batch format
+        run: |
+          set -euo pipefail
+          go list -f '{{.Dir}}' ./... > /tmp/batch-go-package-dirs
+          unformatted="$(xargs gofmt -l < /tmp/batch-go-package-dirs)"
+          if [ -n "$unformatted" ]; then
+            echo "$unformatted"
+            exit 1
+          fi
+      - name: Vet batch
+        run: go vet ./...
+      - name: Test batch
+        run: go test ./...
