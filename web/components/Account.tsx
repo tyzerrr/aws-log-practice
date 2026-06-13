@@ -1,9 +1,9 @@
-import {User} from "lucide-react";
+import { User } from "lucide-react";
 
 export default function Account() {
-    return (
-        <div>
-            <User/>
-        </div>
-    )
+  return (
+    <button type="button">
+      <User />
+    </button>
+  );
 }

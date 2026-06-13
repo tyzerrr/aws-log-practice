@@ -1,9 +1,9 @@
-import {Heart} from "lucide-react";
+import { Heart } from "lucide-react";
 
 export default function Likes() {
-    return (
-        <div>
-            <Heart/>
-        </div>
-    );
+  return (
+    <button type="button">
+      <Heart />
+    </button>
+  );
 }
