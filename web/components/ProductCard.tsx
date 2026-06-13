@@ -2,7 +2,7 @@ import Image from "next/image";
 import { hashKey } from "@/lib/key";
 
 interface ProductCardProps {
-  imageURL: URL;
+  imageURL: string;
   category: string;
   title: string;
   price: number;
@@ -16,10 +16,12 @@ export default function ProductCard({
   price,
   tags,
 }: ProductCardProps) {
+  const productImageURL = new URL(imageURL);
+
   return (
     <div className="flex flex-col items-start">
       <Image
-        src={imageURL.href}
+        src={productImageURL.href}
         alt={title}
         width={240}
         height={240}

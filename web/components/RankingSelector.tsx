@@ -1,18 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import { hashKey } from "@/lib/key";
-
-type RankingOrder = "newer" | "lowerPrice" | "higherPrice";
-
-interface RankingSelector {
-  index: number;
-  context: RankingSelectorContext;
-}
-
-interface RankingSelectorContext {
-  order: RankingOrder;
-}
+import { rankingHandlers } from "@/lib/lib";
+import type { RankingOrder, RankingSelectorContext } from "@/types";
 
 function rankingSelector(focused: boolean): string {
   let css = `border rounded-full px-3 py-1`;
@@ -33,15 +23,15 @@ function getRankingSelectorDisplySet(): Array<{
   ];
 }
 
-export default function RankingSelector() {
-  const [focusedRankingSelector, setFocusedRankingSelector] =
-    useState<RankingSelector>({
-      index: 0,
-      context: {
-        order: "newer",
-      },
-    });
+interface RankingSelectorProps {
+  context: RankingSelectorContext;
+  onSelectOrder: (selector: RankingSelectorContext) => void;
+}
 
+export default function RankingSelector({
+  context,
+  onSelectOrder,
+}: RankingSelectorProps) {
   return (
     <div className="flex justify-between items-center mt-6">
       <div className="flex flex-col gap-1">
@@ -56,17 +46,14 @@ export default function RankingSelector() {
             <button
               key={hashKey("ranking-selector", value.order)}
               type="button"
-              onFocus={() =>
-                setFocusedRankingSelector({
+              onClick={() =>
+                onSelectOrder({
                   index: index,
-                  context: {
-                    order: value.order,
-                  },
+                  order: value.order,
+                  handler: rankingHandlers[value.order],
                 })
               }
-              className={rankingSelector(
-                focusedRankingSelector.index === index,
-              )}
+              className={rankingSelector(context.index === index)}
             >
               {value.display}
             </button>

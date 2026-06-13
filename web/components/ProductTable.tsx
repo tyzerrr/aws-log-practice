@@ -1,7 +1,11 @@
+"use client";
+
+import { useState } from "react";
 import { hashKey } from "@/lib/key";
-import { chunk } from "@/lib/lib";
-import type { Product } from "@/types";
+import { chunk, rankingHandlers } from "@/lib/lib";
+import type { Product, RankingSelectorContext } from "@/types";
 import ProductCard from "./ProductCard";
+import RankingSelector from "./RankingSelector";
 
 interface ProductTableLayout {
   row: number;
@@ -41,9 +45,24 @@ export default function ProductTable({
   tableLayout,
   products,
 }: ProductTableProps) {
+  const [focusedRankingSelectorContext, setFocusedRankingSelectorContext] =
+    useState<RankingSelectorContext>({
+      index: 0,
+      order: "newer",
+      handler: rankingHandlers.newer,
+    });
   return (
     <div>
-      {chunk(products, tableLayout.column).map((productsChunk, index) => {
+      <RankingSelector
+        context={focusedRankingSelectorContext}
+        onSelectOrder={(selectorContext) =>
+          setFocusedRankingSelectorContext(selectorContext)
+        }
+      />
+      {chunk(
+        products.toSorted(focusedRankingSelectorContext.handler),
+        tableLayout.column,
+      ).map((productsChunk, index) => {
         return (
           <div
             key={hashKey("product-row", productsChunk, index)}
