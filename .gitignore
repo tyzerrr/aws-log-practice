@@ -1,5 +1,6 @@
 # Goland
 .idea/
+.vscode/
 # Local .terraform directories
 .terraform/
 
@@ -47,3 +48,4 @@ terraform.rc
 **/.env*
 
 bin/
+.pnpm-store/
