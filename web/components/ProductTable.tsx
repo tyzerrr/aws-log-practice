@@ -1,6 +1,6 @@
-import type { Product } from "@/app/page";
 import { hashKey } from "@/lib/key";
 import { chunk } from "@/lib/lib";
+import type { Product } from "@/types";
 import ProductCard from "./ProductCard";
 
 interface ProductTableLayout {

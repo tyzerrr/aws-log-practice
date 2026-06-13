@@ -1,13 +1,6 @@
 import ProductTable from "@/components/ProductTable";
 import RankingSelector from "@/components/RankingSelector";
-
-export interface Product {
-  imageURL: URL;
-  category: string;
-  title: string;
-  price: number;
-  tags: string[];
-}
+import type { Product } from "@/types";
 
 const products: Product[] = [
   {
