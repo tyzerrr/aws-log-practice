@@ -34,12 +34,17 @@ ECS Fargate と RDS for PostgreSQL を用いたアプリケーション基盤を
 │       └── usecase/          # application usecase
 ├── terraform/dev/aws/        # dev 環境の AWS Terraform
 ├── ecspresso/                # ECS service / one-shot task の ecspresso 定義
-└── web/                      # frontend
+└── web/                      # Next.js frontend
 ```
 
 ## Backend
 
 `server/` は Go の backend アプリケーションです。ドメイン層、ユースケース層、インフラ層を分け、DB アクセスは `sqlc` で生成したコードを使う構成です。
+
+Go module は 2 つあります。
+
+- repository root の `go.mod`: backend application、domain/usecase/infrastructure、protobuf / sqlc tooling 用
+- `server/cmd/batch/go.mod`: ECS one-shot batch 用
 
 主な構成:
 
@@ -123,7 +128,9 @@ migration で新しい table / sequence を追加した後は、application 用 
 
 ## Frontend
 
-`web/` は Next.js の frontend アプリケーションです。
+`web/` は Next.js の frontend アプリケーションです。現在は商品一覧 UI、header/footer、UI primitive component、Vitest + React Testing Library による component unit test を整備しています。
+
+今後の frontend 開発では、現在の静的な商品データを backend API に接続する必要があります。`proto/product/v1/product.proto` から生成した `web/gen/` の ConnectRPC client を使い、`server/cmd/server` が提供する product API から商品一覧を取得する構成に寄せていきます。
 
 採用技術:
 
@@ -135,7 +142,21 @@ migration で新しい table / sequence を追加した後は、application 用 
 - TanStack Query
 - ConnectRPC
 - Biome
+- Vitest
+- React Testing Library
 - pnpm
+
+主なコマンド:
+
+```bash
+cd web
+corepack enable
+pnpm install --frozen-lockfile
+pnpm run dev
+pnpm run build
+pnpm run lint
+pnpm run test
+```
 
 ## Local Development
 
@@ -177,17 +198,45 @@ go run ./server/cmd/server
 
 ECS では password 入り `DATABASE_URL` を渡さず、`DB_HOST` / `DB_PORT` / `DB_NAME` / `DB_USER` / `DB_PASSWORD` / `DB_SSLMODE` から backend が DSN を組み立てます。`DB_USER` と `DB_PASSWORD` は Secrets Manager の application DB secret から ECS task definition の `secrets` で注入します。
 
+backend application のローカル検証:
+
+```bash
+cd server
+go build ./...
+go list -f '{{.Dir}}' ./... | xargs gofmt -l
+go vet ./...
+go test ./...
+```
+
+batch module のローカル検証:
+
+```bash
+cd server/cmd/batch
+go build -o /tmp/aws-log-practice-batch .
+go list -f '{{.Dir}}' ./... | xargs gofmt -l
+go vet ./...
+go test ./...
+```
+
 ### 3. Frontend
 
 frontend は `web/` で依存関係を入れてから Next.js dev server を起動します。
 
 ```bash
 cd web
-corepack pnpm install
-corepack pnpm run dev
+corepack enable
+pnpm install --frozen-lockfile
+pnpm run dev
 ```
 
 起動後、frontend は `http://localhost:3000` で確認できます。
+
+component unit test は Vitest + React Testing Library で実行します。
+
+```bash
+cd web
+pnpm run test
+```
 
 ### Generated Code
 
@@ -197,8 +246,18 @@ Protocol Buffers を変更した場合は、backend と frontend の生成コー
 make buf-gen
 
 cd web
-corepack pnpm run proto:gen
+pnpm run proto:gen
 ```
+
+## CI
+
+`.github/workflows/ci.yml` は `push` と `pull_request` で実行します。
+
+- `web` job: `web/` で pnpm install、Next.js build、Biome lint、Vitest を実行します。`pnpm/action-setup` と `actions/setup-node` の input は repository root 基準なので、`web/package.json` / `web/pnpm-lock.yaml` を明示しています。
+- `server` job: repository root の `go.mod` を使う backend application を対象に、build、gofmt check、go vet、go test を実行します。
+- `batch` job: `server/cmd/batch/go.mod` を使う batch module を対象に、build、gofmt check、go vet、go test を実行します。
+
+Go format check は `go fmt` で書き換えるのではなく、`gofmt -l` の出力がある場合に失敗させます。
 
 ## Infrastructure
 
