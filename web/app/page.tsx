@@ -1,5 +1,9 @@
+"use client";
+
 import ProductTable from "@/components/ProductTable";
+import { useSearch } from "@/components/SearchProvider";
 import type { Product } from "@/types";
+import { useState } from "react";
 
 const products: Product[] = [
   {
@@ -77,6 +81,7 @@ const products: Product[] = [
 ];
 
 export default function Home() {
+  const { searchTerm } = useSearch();
   return (
     <div className="w-full flex flex-col justify-between px-12">
       <ProductTable
@@ -87,6 +92,7 @@ export default function Home() {
           row: Math.ceil(products.length / 4),
         }}
         products={products}
+        searchTerm={searchTerm}
       />
     </div>
   );

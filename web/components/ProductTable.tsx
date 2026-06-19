@@ -16,6 +16,7 @@ interface ProductTableLayout {
 interface ProductTableProps {
   tableLayout: ProductTableLayout;
   products: Product[];
+  searchTerm: string;
 }
 
 interface ProductTableRowProps {
@@ -24,7 +25,7 @@ interface ProductTableRowProps {
 
 function ProductTableRow({ products }: ProductTableRowProps) {
   return (
-    <div className="flex gap-6 items-center w-full justify-between">
+    <div className="grid w-full grid-cols-4 gap-6">
       {products.map((product, index) => {
         return (
           <ProductCard
@@ -44,6 +45,7 @@ function ProductTableRow({ products }: ProductTableRowProps) {
 export default function ProductTable({
   tableLayout,
   products,
+  searchTerm,
 }: ProductTableProps) {
   const [focusedRankingSelectorContext, setFocusedRankingSelectorContext] =
     useState<RankingSelectorContext>({
@@ -60,13 +62,17 @@ export default function ProductTable({
         }
       />
       {chunk(
-        products.toSorted(focusedRankingSelectorContext.handler),
+        products
+          .filter((product) =>
+            product.title.toLowerCase().includes(searchTerm.toLowerCase()),
+          )
+          .toSorted(focusedRankingSelectorContext.handler),
         tableLayout.column,
       ).map((productsChunk, index) => {
         return (
           <div
             key={hashKey("product-row", productsChunk, index)}
-            className="flex flex-col justify-between w-full my-6"
+            className="my-6 w-full"
           >
             <ProductTableRow products={productsChunk} />
           </div>
