@@ -1,9 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import ProductTable from "@/components/ProductTable";
 import { useSearch } from "@/components/SearchProvider";
 import type { Product } from "@/types";
-import { useState } from "react";
 
 const products: Product[] = [
   {

@@ -1,6 +1,7 @@
 "use client";
 
-import React, { createContext, useContext, useState } from "react";
+import type React from "react";
+import { createContext, useContext, useState } from "react";
 
 const SearchContext = createContext<{
   searchTerm: string;
@@ -8,9 +9,9 @@ const SearchContext = createContext<{
 }>({
   searchTerm: "",
   setSearchTerm: (_: string) => {},
-})
+});
 
-export function SearchProvider({children}: {children: React.ReactNode}) {
+export function SearchProvider({ children }: { children: React.ReactNode }) {
   const [searchTerm, setSearchTerm] = useState<string>("");
 
   return (

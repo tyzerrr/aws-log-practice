@@ -51,6 +51,7 @@ function renderProductTable() {
         totalProductCount: products.length,
       }}
       products={products}
+      searchTerm=""
     />,
   );
 }
