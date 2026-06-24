@@ -9,8 +9,8 @@ import (
 
 // status code mapping follows those between gRPC and HTTP.
 const (
-	CodeNotFoundErr int = 404
-	CodeAlreadyExistsErr int = 409
+	CodeNotFoundErr       int = 404
+	CodeAlreadyExistsErr  int = 409
 	CodeInternalServerErr int = 500
 )
 
@@ -28,13 +28,13 @@ type Error interface {
 
 type NotFoundError struct {
 	code int
-	err error
+	err  error
 }
 
 func NewNotFoundError(err error) *NotFoundError {
 	return &NotFoundError{
 		code: CodeNotFoundErr,
-		err: err,
+		err:  err,
 	}
 }
 
@@ -56,13 +56,13 @@ func (e *NotFoundError) Retryable() bool {
 
 type AlreadyExistsError struct {
 	code int
-	err error
+	err  error
 }
 
 func NewAlreadyExistsError(err error) *AlreadyExistsError {
 	return &AlreadyExistsError{
 		code: CodeAlreadyExistsErr,
-		err: err,
+		err:  err,
 	}
 }
 
@@ -84,13 +84,13 @@ func (e *AlreadyExistsError) Retryable() bool {
 
 type InternalServerError struct {
 	code int
-	err error
+	err  error
 }
 
 func NewInternalServerError(err error) *InternalServerError {
 	return &InternalServerError{
 		code: CodeInternalServerErr,
-		err: err,
+		err:  err,
 	}
 }
 
@@ -131,4 +131,3 @@ func ErrorFromDB(err error) Error {
 
 	return NewInternalServerError(err)
 }
-
