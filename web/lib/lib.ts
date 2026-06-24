@@ -23,3 +23,11 @@ export const rankingHandlers = {
     return a.price - b.price;
   },
 };
+
+// 1. Create Promise that calls resolve() afeter ms
+// 2. Promise is returned, status is pending
+// 3. Await pending promise until promise would be resolved, that is after ms
+// 4. Promise is fulfilled
+export function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
