@@ -8,6 +8,7 @@ import (
 	"github.com/tyzerrr/aws-log-practice/server/internal/adapter/transaction"
 	"github.com/tyzerrr/aws-log-practice/server/internal/domain"
 	"github.com/tyzerrr/aws-log-practice/server/internal/domain/entity"
+	uerrors "github.com/tyzerrr/aws-log-practice/server/internal/usecase/errors"
 )
 
 type ProductUsecase interface {
@@ -43,7 +44,7 @@ func (uc *productUsecase) CreateProduct(ctx context.Context, product *entity.Pro
 		newProduct, err = uc.newRepo(tx).CreateOne(ctx, product)
 		return err
 	}); err != nil {
-		return nil, err
+		return nil, uerrors.ErrorFromDB(err)
 	}
 	return newProduct, nil
 }
@@ -55,7 +56,7 @@ func (uc *productUsecase) GetActiveProductsCount(ctx context.Context) (int64, er
 		count = int64(len(products))
 		return err
 	}); err != nil {
-		return -1, err
+		return -1, uerrors.ErrorFromDB(err)
 	}
 	return count, nil
 }
@@ -68,7 +69,7 @@ func (uc *productUsecase) ListActiveProducts(ctx context.Context) ([]*entity.Pro
 		products, err = uc.newRepo(tx).FindAllActiveProducts(ctx)
 		return err
 	}); err != nil {
-		return nil, err
+		return nil, uerrors.ErrorFromDB(err)
 	}
 	return products, nil
 }
